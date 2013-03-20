@@ -1,15 +1,21 @@
 #!/bin/sh
 
+PROGS="args \
+       client \
+       server"
+
 build() {
-gcc -g -o args args.c
-gcc -g -o client client.c
-gcc -g -o server server.c
+    for PROG in ${PROGS}
+    do
+        gcc -g -o ${PROG} ${PROG}.c
+    done
 }
 
 clean() {
-rm args
-rm client
-rm server
+    for PROG in ${PROGS}
+    do
+        rm -f ${PROG}
+    done
 }
 
 if [ "$1" = "" ]
