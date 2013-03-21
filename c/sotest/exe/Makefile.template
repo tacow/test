@@ -1,0 +1,129 @@
+# 自动构建脚本，尹涛编写
+# 修改日期2013/03/12
+
+OBJECT_PATH_RELEASE = .obj
+OBJECT_PATH_DEBUG = .debugobj
+VPATH = ${OBJECT_PATH_RELEASE} ${OBJECT_PATH_DEBUG}
+
+HEADERS = ${wildcard *.h}
+
+C_SOURCES = ${wildcard *.c}
+C_OBJECTS_RELEASE = ${subst .c,.c.o,${C_SOURCES}}
+C_OBJECTS_DEBUG = ${subst .c,_debug.c.o,${C_SOURCES}}
+
+CPP_SOURCES = ${wildcard *.cpp}
+CPP_OBJECTS_RELEASE = ${subst .cpp,.cpp.o,${CPP_SOURCES}}
+CPP_OBJECTS_DEBUG = ${subst .cpp,_debug.cpp.o,${CPP_SOURCES}}
+
+OBJECTS_RELEASE = ${C_OBJECTS_RELEASE} ${CPP_OBJECTS_RELEASE}
+OBJECTS_DEBUG = ${C_OBJECTS_DEBUG} ${CPP_OBJECTS_DEBUG}
+
+DEFINITIONS2 = ${subst :, ,${DEFINITIONS}}
+DEFINITIONS_FLAG = ${foreach DEFINITION,${DEFINITIONS2},-D${DEFINITION}}
+
+INCLUDE_DIRS2 = ${subst :, ,${INCLUDE_DIRS}}
+INCLUDE_DIRS_FLAG = ${foreach INCLUDE_DIR,${INCLUDE_DIRS2},-I${INCLUDE_DIR}}
+
+LIBRARY_DIRS2 = ${subst :, ,${LIBRARY_DIRS}}
+LIBRARY_DIRS_FLAG = ${foreach LIBRARY_DIR,${LIBRARY_DIRS2},-L${LIBRARY_DIR}}
+
+LIBRARYS2 = ${subst :, ,${LIBRARYS}}
+LIBRARYS_FLAG = ${foreach LIBRARY,${LIBRARYS2},-l${LIBRARY}}
+
+ifeq (${USE_PTHREAD}, TRUE)
+PTHREAD_FLAG = -pthread
+PTHREAD_LIB  = -lpthread
+endif
+
+ifeq (${DESTINATION_PLATFORM}, )
+PLATFORM_FLAG = 
+else
+PLATFORM_FLAG = -m${DESTINATION_PLATFORM}
+endif
+
+ifeq (${DESTINATION_TYPE}, SHARED_OBJECT)
+PIC_FLAG = -fPIC
+else
+PIC_FLAG = 
+endif
+
+ifeq (${SONAME_RELEASE}, )
+SONAME_FLAG_RELEASE =
+else
+SONAME_FLAG_RELEASE = -Wl,-soname,${SONAME_RELEASE}
+endif
+
+ifeq (${SONAME_DEBUG}, )
+SONAME_FLAG_DEBUG =
+else
+SONAME_FLAG_DEBUG = -Wl,-soname,${SONAME_DEBUG}
+endif
+
+%.c.o: %.c ${HEADERS} Makefile
+	gcc -Wall -g -O2 ${PIC_FLAG} ${CFLAGS} ${INCLUDE_DIRS_FLAG} ${PTHREAD_FLAG} ${PLATFORM_FLAG} ${DEFINITIONS_FLAG} -c -o ${OBJECT_PATH_RELEASE}/$@ $<
+
+%.cpp.o: %.cpp ${HEADERS} Makefile
+	g++ -Wall -g -O2 ${PIC_FLAG} ${CFLAGS} ${INCLUDE_DIRS_FLAG} ${PTHREAD_FLAG} ${PLATFORM_FLAG} ${DEFINITIONS_FLAG} -c -o ${OBJECT_PATH_RELEASE}/$@ $<
+
+%_debug.c.o: %.c ${HEADERS} Makefile
+	gcc -Wall -g ${PIC_FLAG} ${CFLAGS} ${INCLUDE_DIRS_FLAG} ${PTHREAD_FLAG} ${PLATFORM_FLAG} ${DEFINITIONS_FLAG} -c -o ${OBJECT_PATH_DEBUG}/$@ $<
+
+%_debug.cpp.o: %.cpp ${HEADERS} Makefile
+	g++ -Wall -g ${PIC_FLAG} ${CFLAGS} ${INCLUDE_DIRS_FLAG} ${PTHREAD_FLAG} ${PLATFORM_FLAG} ${DEFINITIONS_FLAG} -c -o ${OBJECT_PATH_DEBUG}/$@ $<
+
+all: release debug
+
+release: prebuildrelease ${DESTINATION_RELEASE}
+
+${DESTINATION_RELEASE}: ${OBJECTS_RELEASE} Makefile
+	@echo
+	@echo "Linking RELEASE..."
+	@echo
+ifeq (${DESTINATION_TYPE}, EXECUTABLE)
+	g++ ${PLATFORM_FLAG} -o ${DESTINATION_RELEASE} ${addprefix ${OBJECT_PATH_RELEASE}/,${OBJECTS_RELEASE}} ${MODULES_RELEASE} ${LIBRARY_DIRS_FLAG} ${LIBRARYS_FLAG} ${PTHREAD_LIB}
+endif
+ifeq (${DESTINATION_TYPE}, ARCHIVE)
+	ar rcs ${DESTINATION_RELEASE} ${addprefix ${OBJECT_PATH_RELEASE}/,${OBJECTS_RELEASE}}
+endif
+ifeq (${DESTINATION_TYPE}, SHARED_OBJECT)
+	g++ ${PLATFORM_FLAG} -shared ${SONAME_FLAG_RELEASE} -o ${DESTINATION_RELEASE} ${addprefix ${OBJECT_PATH_RELEASE}/,${OBJECTS_RELEASE}} ${MODULES_RELEASE} ${LIBRARY_DIRS_FLAG} ${LIBRARYS_FLAG} ${PTHREAD_LIB}
+endif
+	@echo
+
+debug: prebuilddebug ${DESTINATION_DEBUG}
+
+${DESTINATION_DEBUG}: ${OBJECTS_DEBUG} Makefile
+	@echo
+	@echo "Linking DEBUG..."
+	@echo
+ifeq (${DESTINATION_TYPE}, EXECUTABLE)
+	g++ ${PLATFORM_FLAG} -o ${DESTINATION_DEBUG} ${addprefix ${OBJECT_PATH_DEBUG}/,${OBJECTS_DEBUG}} ${MODULES_DEBUG} ${LIBRARY_DIRS_FLAG} ${LIBRARYS_FLAG} ${PTHREAD_LIB}
+endif
+ifeq (${DESTINATION_TYPE}, ARCHIVE)
+	ar rcs ${DESTINATION_DEBUG} ${addprefix ${OBJECT_PATH_DEBUG}/,${OBJECTS_DEBUG}}
+endif
+ifeq (${DESTINATION_TYPE}, SHARED_OBJECT)
+	g++ ${PLATFORM_FLAG} -shared ${SONAME_FLAG_DEBUG} -o ${DESTINATION_DEBUG} ${addprefix ${OBJECT_PATH_DEBUG}/,${OBJECTS_DEBUG}} ${MODULES_DEBUG} ${LIBRARY_DIRS_FLAG} ${LIBRARYS_FLAG} ${PTHREAD_LIB}
+endif
+	@echo
+
+clean:
+	rm -rf ${OBJECT_PATH_RELEASE}
+	rm -rf ${OBJECT_PATH_DEBUG}
+
+veryclean: clean
+	rm -f ${DESTINATION_RELEASE}
+	rm -f ${DESTINATION_DEBUG}
+
+prebuildrelease:
+	@echo "Building RELEASE..."
+	@echo
+	@mkdir -p ${OBJECT_PATH_RELEASE}
+
+prebuilddebug:
+	@echo "Building DEBUG..."
+	@echo
+	@mkdir -p ${OBJECT_PATH_DEBUG}
+
+.PHONY: all clean veryclean prebuildrelease prebuilddebug
+
