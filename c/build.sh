@@ -4,10 +4,15 @@ PROGS="args \
        client \
        server"
 
+compile() {
+    PROG=$1
+    gcc -g -o ${PROG} ${PROG}.c
+}
+
 build() {
     for PROG in ${PROGS}
     do
-        gcc -g -o ${PROG} ${PROG}.c
+        compile ${PROG}
     done
 }
 
@@ -21,10 +26,10 @@ clean() {
 if [ "$1" = "" ]
 then
     build
-fi
-
-if [ "$1" = "clean" ]
+elif [ "$1" = "clean" ]
 then
     clean
+else
+    compile "$1"
 fi
 
