@@ -1,8 +1,9 @@
 #!/bin/sh
 
-PROGS="args \
-       client \
-       server"
+PROGS=" args \
+        system \
+        client \
+        server"
 
 compile() {
     PROG=$1
@@ -12,6 +13,7 @@ compile() {
 build() {
     for PROG in ${PROGS}
     do
+        echo "Compiling ${PROG}..."
         compile ${PROG}
     done
 }
