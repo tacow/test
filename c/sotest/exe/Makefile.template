@@ -1,9 +1,11 @@
 # 自动构建脚本，尹涛编写
-# 修改日期2013/03/12
+# 修改日期2013/05/06
 
 OBJECT_PATH_RELEASE = .obj
 OBJECT_PATH_DEBUG = .debugobj
 VPATH = ${OBJECT_PATH_RELEASE} ${OBJECT_PATH_DEBUG}
+
+SUBDIRS2 = ${subst :, ,${SUBDIRS}}
 
 HEADERS = ${wildcard *.h}
 
@@ -73,7 +75,7 @@ endif
 
 all: release debug
 
-release: prebuildrelease ${DESTINATION_RELEASE}
+release: subdirbuildrelease prebuildrelease ${DESTINATION_RELEASE}
 
 ${DESTINATION_RELEASE}: ${OBJECTS_RELEASE} Makefile
 	@echo
@@ -90,7 +92,7 @@ ifeq (${DESTINATION_TYPE}, SHARED_OBJECT)
 endif
 	@echo
 
-debug: prebuilddebug ${DESTINATION_DEBUG}
+debug: subdirbuilddebug prebuilddebug ${DESTINATION_DEBUG}
 
 ${DESTINATION_DEBUG}: ${OBJECTS_DEBUG} Makefile
 	@echo
@@ -108,22 +110,44 @@ endif
 	@echo
 
 clean:
+	@for SUBDIR in ${SUBDIRS2}; \
+	do \
+		${MAKE} -C $${SUBDIR} clean; \
+	done
 	rm -rf ${OBJECT_PATH_RELEASE}
 	rm -rf ${OBJECT_PATH_DEBUG}
 
 veryclean: clean
+	@for SUBDIR in ${SUBDIRS2}; \
+	do \
+		${MAKE} -C $${SUBDIR} veryclean; \
+	done
 	rm -f ${DESTINATION_RELEASE}
 	rm -f ${DESTINATION_DEBUG}
+
+subdirbuildrelease:
+	@for SUBDIR in ${SUBDIRS2}; \
+	do \
+		echo "Building sub-directory $${SUBDIR}..."; \
+		${MAKE} -C $${SUBDIR} release; \
+	done
 
 prebuildrelease:
 	@echo "Building RELEASE..."
 	@echo
 	@mkdir -p ${OBJECT_PATH_RELEASE}
 
+subdirbuilddebug:
+	@for SUBDIR in ${SUBDIRS2}; \
+	do \
+		echo "Building sub-directory $${SUBDIR}..."; \
+		${MAKE} -C $${SUBDIR} debug; \
+	done
+
 prebuilddebug:
 	@echo "Building DEBUG..."
 	@echo
 	@mkdir -p ${OBJECT_PATH_DEBUG}
 
-.PHONY: all clean veryclean prebuildrelease prebuilddebug
+.PHONY: all clean veryclean subdirbuildrelease prebuildrelease subdirbuilddebug prebuilddebug
 
