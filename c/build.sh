@@ -1,12 +1,7 @@
 #!/bin/sh
 
-PROGS=" args \
-        system \
-        client \
-        iconv \
-        server \
-        strftime\
-        rand"
+SOURCES=$(ls *.c)
+PROGS=${SOURCES//.c/}
 
 compile() {
     PROG=$1
