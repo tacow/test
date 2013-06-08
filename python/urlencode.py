@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import sys
-from urllib import urlencode
+from urllib import urlencode, quote
 
 if len(sys.argv) < 2:
     print "Usage: %s [filename]" % sys.argv[0]
@@ -14,4 +14,7 @@ f.close()
 query = {}
 query["content"] = str
 print urlencode(query)
+
+print "=========="
+print quote(str)
 
