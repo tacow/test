@@ -3,7 +3,8 @@
 PROGS=" args \
         system \
         client \
-        server"
+        server \
+        strftime"
 
 compile() {
     PROG=$1
