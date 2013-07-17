@@ -8,6 +8,16 @@ filename = sys.argv[1]
 
 f = open(filename)
 str = f.read()
-f.close()
 print str
+
+print "#" * 20
+
+f.seek(0)
+lineNum = 1
+for line in f:
+    line = line.rstrip("\r\n")
+    print "%d %s" % (lineNum, line)
+    lineNum += 1
+
+f.close()
 
