@@ -4,7 +4,8 @@ PROGS=" args \
         system \
         client \
         server \
-        strftime"
+        strftime\
+        rand"
 
 compile() {
     PROG=$1
