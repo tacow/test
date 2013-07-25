@@ -22,6 +22,10 @@ MODULES_DEBUG =
 DESTINATION_RELEASE = tt
 # 目标文件名（Debug版）
 DESTINATION_DEBUG = tt_d
+# 编译Release版后执行的命令
+AFTER_BUILD_RELEASE = 
+# 编译Debug版后执行的命令
+AFTER_BUILD_DEBUG = 
 
 # 是否使用PTHREAD线程库，取值为TRUE或者FALSE
 USE_PTHREAD = TRUE
