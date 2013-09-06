@@ -29,7 +29,8 @@ int main(int argc, char* argv[]) {
     listen(s, 10);
     int s1 = accept(s, NULL, NULL);
     if (s1 != -1) {
-        printf("success\n");
+        printf("success, press <ENTER> to close\n");
+        getchar();
         close(s1);
     } else {
         printf("failed(%d, %s)\n", errno, strerror(errno));
