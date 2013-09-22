@@ -2,13 +2,20 @@
 #include <string.h>
 #include <openssl/md5.h>
 
+void MdToStr(unsigned char* md, char* str) {
+    size_t i;
+
+    for(i = 0; i < MD5_DIGEST_LENGTH; ++i)
+        snprintf(str + i * 2, 3, "%02X", md[i]);
+}
+
 void FileMd5(const char* filename) {
     FILE* f = NULL;
     char buf[4096];
     size_t n = 0;
     MD5_CTX ctx;
     unsigned char md[MD5_DIGEST_LENGTH];
-    size_t i = 0;
+    char md5Str[33];
 
     f = fopen(filename, "r");
     if (f == NULL) {
@@ -22,23 +29,21 @@ void FileMd5(const char* filename) {
     }
     MD5_Final(md, &ctx);
 
-    for(i = 0; i < MD5_DIGEST_LENGTH; ++i)
-        printf("%02X", md[i]);
-    printf("\n");
+    MdToStr(md, md5Str);
+    printf("%s\n", md5Str);
     fclose(f);
 }
 
 void StringMd5() {
     char line[4096];
     unsigned char md[MD5_DIGEST_LENGTH];
-    size_t i = 0;
+    char md5Str[33];
 
     fgets(line, 4096, stdin);
     MD5((unsigned char*)line, strlen(line), md);
 
-    for(i = 0; i < MD5_DIGEST_LENGTH; ++i)
-        printf("%02X", md[i]);
-    printf("\n");
+    MdToStr(md, md5Str);
+    printf("%s\n", md5Str);
 }
 
 int main(int argc, char* argv[]) {
