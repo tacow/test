@@ -3,6 +3,7 @@
 PROGS=" args \
         system \
         client \
+        iconv \
         server \
         strftime\
         rand"
