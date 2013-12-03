@@ -4,8 +4,6 @@ def ReadConfig(filename, sep = ":"):
     try:
         keyVals = {}
         f = open(filename, "r")
-        if not f:
-            return keyVals
 
         for line in f:
             line = line.strip()
@@ -21,6 +19,6 @@ def ReadConfig(filename, sep = ":"):
         f.close()
         return keyVals
     except Exception, e:
-        print "Exception: %s" % str(e)
+        print "Load config %s: %s" % (filename, str(e))
         return {}
 
