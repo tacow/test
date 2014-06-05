@@ -5,72 +5,72 @@
 
 using namespace std;
 
-void PrintSectionLine(const char* name, const char* type, const char* flags, const char* offset, const char* size) {
-    printf("%-25s%-15s%-35s%10s%10s\n", name, type, flags, offset, size);
+void PrintSectionLine(const char* name, const char* type, const char* flags, const char* offset, const char* size, const char* align) {
+    printf("%-25s%-15s%-25s%10s%10s%10s\n", name, type, flags, offset, size, align);
 }
 
 const char* GetSectionType(Elf64_Word sType) {
     switch(sType) {
     case SHT_NULL:
-        return "SHT_NULL";
+        return "NULL";
     case SHT_PROGBITS:
-        return "SHT_PROGBITS";
+        return "PROGBITS";
     case SHT_SYMTAB:
-        return "SHT_SYMTAB";
+        return "SYMTAB";
     case SHT_STRTAB:
-        return "SHT_STRTAB";
+        return "STRTAB";
     case SHT_RELA:
-        return "SHT_RELA";
+        return "RELA";
     case SHT_HASH:
-        return "SHT_HASH";
+        return "HASH";
     case SHT_DYNAMIC:
-        return "SHT_DYNAMIC";
+        return "DYNAMIC";
     case SHT_NOTE:
-        return "SHT_NOTE";
+        return "NOTE";
     case SHT_NOBITS:
-        return "SHT_NOBITS";
+        return "NOBITS";
     case SHT_REL:
-        return "SHT_REL";
+        return "REL";
     case SHT_SHLIB:
-        return "SHT_SHLIB";
+        return "SHLIB";
     case SHT_DYNSYM:
-        return "SHT_DYNSYM";
+        return "DYNSYM";
     case SHT_INIT_ARRAY:
-        return "SHT_INIT_ARRAY";
+        return "INIT_ARRAY";
     case SHT_FINI_ARRAY:
-        return "SHT_FINI_ARRAY";
+        return "FINI_ARRAY";
     case SHT_PREINIT_ARRAY:
-        return "SHT_PREINIT_ARRAY";
+        return "PREINIT_ARRAY";
     case SHT_GROUP:
-        return "SHT_GROUP";
+        return "GROUP";
     case SHT_SYMTAB_SHNDX:
-        return "SHT_SYMTAB_SHNDX";
+        return "SYMTAB_SHNDX";
     case SHT_NUM:
-        return "SHT_NUM";
+        return "NUM";
     case SHT_LOOS:
-        return "SHT_LOOS";
+        return "LOOS";
     case SHT_GNU_ATTRIBUTES:
-        return "SHT_GNU_ATTRIBUTES";
+        return "GNU_ATTRIBUTES";
     case SHT_GNU_HASH:
-        return "SHT_GNU_HASH";
+        return "GNU_HASH";
     case SHT_GNU_LIBLIST:
-        return "SHT_GNU_LIBLIST";
+        return "GNU_LIBLIST";
     case SHT_CHECKSUM:
-        return "SHT_CHECKSUM";
+        return "CHECKSUM";
     case SHT_GNU_verdef:
-        return "SHT_GNU_verdef";
+        return "GNU_verdef";
     case SHT_GNU_verneed:
-        return "SHT_GNU_verneed";
+        return "GNU_verneed";
     case SHT_GNU_versym:
-        return "SHT_GNU_versym";
+        return "GNU_versym";
     case SHT_LOPROC:
-        return "SHT_LOPROC";
+        return "LOPROC";
     case SHT_HIPROC:
-        return "SHT_HIPROC";
+        return "HIPROC";
     case SHT_LOUSER:
-        return "SHT_LOUSER";
+        return "LOUSER";
     case SHT_HIUSER:
-        return "SHT_HIUSER";
+        return "HIUSER";
     }
     return "";
 }
@@ -78,33 +78,33 @@ const char* GetSectionType(Elf64_Word sType) {
 string GetSectionFlags(Elf64_Xword sFlags) {
     string strFlags;
     if (sFlags & SHF_WRITE)
-        strFlags += "SHF_WRITE ";
+        strFlags += "WRITE ";
     if (sFlags & SHF_ALLOC)
-        strFlags += "SHF_ALLOC ";
+        strFlags += "ALLOC ";
     if (sFlags & SHF_EXECINSTR)
-        strFlags += "SHF_EXECINSTR ";
+        strFlags += "EXECINSTR ";
     if (sFlags & SHF_MERGE)
-        strFlags += "SHF_MERGE ";
+        strFlags += "MERGE ";
     if (sFlags & SHF_STRINGS)
-        strFlags += "SHF_STRINGS ";
+        strFlags += "STRINGS ";
     if (sFlags & SHF_INFO_LINK)
-        strFlags += "SHF_INFO_LINK ";
+        strFlags += "INFO_LINK ";
     if (sFlags & SHF_LINK_ORDER)
-        strFlags += "SHF_LINK_ORDER ";
+        strFlags += "LINK_ORDER ";
     if (sFlags & SHF_OS_NONCONFORMING)
-        strFlags += "SHF_OS_NONCONFORMING ";
+        strFlags += "OS_NONCONFORMING ";
     if (sFlags & SHF_GROUP)
-        strFlags += "SHF_GROUP ";
+        strFlags += "GROUP ";
     if (sFlags & SHF_TLS)
-        strFlags += "SHF_TLS ";
+        strFlags += "TLS ";
     if (sFlags & SHF_MASKOS)
-        strFlags += "SHF_MASKOS ";
+        strFlags += "MASKOS ";
     if (sFlags & SHF_MASKPROC)
-        strFlags += "SHF_MASKPROC ";
+        strFlags += "MASKPROC ";
     if (sFlags & SHF_ORDERED)
-        strFlags += "SHF_ORDERED ";
+        strFlags += "ORDERED ";
     if (sFlags & SHF_EXCLUDE)
-        strFlags += "SHF_EXCLUDE ";
+        strFlags += "EXCLUDE ";
     return strFlags;
 }
 
@@ -138,18 +138,19 @@ int main(int argc, char* argv[]) {
     fseek(f, sstOff, SEEK_SET);
     fread(sstContent, 1, sstSize, f);
 
-    PrintSectionLine("[Section name]", "[Type]", "[Flags]", "[Offset]", "[Size]");
+    PrintSectionLine("[Section name]", "[Type]", "[Flags]", "[Offset]", "[Size]", "[Align]");
 
     fseek(f, elf.e_shoff, SEEK_SET);
     for(Elf64_Half i = 0; i < elf.e_shnum; ++i) {
         Elf64_Shdr shdr;
         fread(&shdr, 1, sizeof(Elf64_Shdr), f);
 
-        char strOffset[16], strSize[16];
+        char strOffset[16], strSize[16], strAlign[16];
         snprintf(strOffset, 16, "%"PRIu64, shdr.sh_offset);
         snprintf(strSize, 16, "%"PRIu64, shdr.sh_size);
+        snprintf(strAlign, 16, "%"PRIu64, shdr.sh_addralign);
 
-        PrintSectionLine(&sstContent[shdr.sh_name], GetSectionType(shdr.sh_type), GetSectionFlags(shdr.sh_flags).c_str(), strOffset, strSize);
+        PrintSectionLine(&sstContent[shdr.sh_name], GetSectionType(shdr.sh_type), GetSectionFlags(shdr.sh_flags).c_str(), strOffset, strSize, strAlign);
     }
 
     delete[] sstContent;
