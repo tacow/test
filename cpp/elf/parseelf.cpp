@@ -4,6 +4,10 @@
 
 using namespace std;
 
+void PrintSectionLine(const char* name, const char* type, const char* flags, const char* offset, const char* size) {
+    printf("%-25s%-15s%-35s%10s%10s\n", name, type, flags, offset, size);
+}
+
 const char* GetSectionType(Elf64_Word sType) {
     switch(sType) {
     case SHT_NULL:
@@ -133,14 +137,18 @@ int main(int argc, char* argv[]) {
     fseek(f, sstOff, SEEK_SET);
     fread(sstContent, 1, sstSize, f);
 
-    printf("%-20s%-20s%-40s\n", "[Section name]", "[Type]", "[Flags]");
+    PrintSectionLine("[Section name]", "[Type]", "[Flags]", "[Offset]", "[Size]");
 
     fseek(f, elf.e_shoff, SEEK_SET);
     for(Elf64_Half i = 0; i < elf.e_shnum; ++i) {
         Elf64_Shdr shdr;
         fread(&shdr, 1, sizeof(Elf64_Shdr), f);
 
-        printf("%-20s%-20s%-40s\n", &sstContent[shdr.sh_name], GetSectionType(shdr.sh_type), GetSectionFlags(shdr.sh_flags).c_str());
+        char strOffset[16], strSize[16];
+        snprintf(strOffset, 16, "%lX", shdr.sh_offset);
+        snprintf(strSize, 16, "%lX", shdr.sh_size);
+
+        PrintSectionLine(&sstContent[shdr.sh_name], GetSectionType(shdr.sh_type), GetSectionFlags(shdr.sh_flags).c_str(), strOffset, strSize);
     }
 
     delete[] sstContent;
