@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <inttypes.h>
 #include <elf.h>
 #include <string>
 
@@ -145,8 +146,8 @@ int main(int argc, char* argv[]) {
         fread(&shdr, 1, sizeof(Elf64_Shdr), f);
 
         char strOffset[16], strSize[16];
-        snprintf(strOffset, 16, "%lX", shdr.sh_offset);
-        snprintf(strSize, 16, "%lX", shdr.sh_size);
+        snprintf(strOffset, 16, "%"PRIu64, shdr.sh_offset);
+        snprintf(strSize, 16, "%"PRIu64, shdr.sh_size);
 
         PrintSectionLine(&sstContent[shdr.sh_name], GetSectionType(shdr.sh_type), GetSectionFlags(shdr.sh_flags).c_str(), strOffset, strSize);
     }
