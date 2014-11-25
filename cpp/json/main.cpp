@@ -15,10 +15,11 @@ int main() {
         return 0;
     }
  
-    int size = root.size();
-    for(int i = 0; i < size; ++i) {
-        string name = root[i]["name"].asString();
-        int len = root[i]["len"].asInt();
+    UInt size = root.size();
+    for(UInt i = 0; i < size; ++i) {
+        Value& item = root[i];
+        string name = item["name"].asString();
+        int len = item["len"].asInt();
         printf("%s: %d\n", name.c_str(), len);
     }
     return 0;
