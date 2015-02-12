@@ -1,6 +1,10 @@
 #ifndef REF_COUNT_H
 #define REF_COUNT_H
 
+#include <boost/atomic.hpp>
+
+using namespace boost;
+
 template<class DerivedClass>
 class RefCountObject {
 public:
@@ -8,12 +12,12 @@ public:
     virtual ~RefCountObject() {}
 
     void AddRef() { ++m_refCount; }
-    void Release() { --m_refCount; if (m_refCount == 0) delete (DerivedClass*)this; }
+    void Release() { if (--m_refCount == 0) delete (DerivedClass*)this; }
 
     int GetRefCount() { return m_refCount; }
 
 private:
-    int m_refCount;
+    atomic_int m_refCount;
 };
 
 #endif
