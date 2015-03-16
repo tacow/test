@@ -105,7 +105,7 @@ void MsgLogger::AddMsgModifier(MsgModifier* msgFilter) {
     m_msgModifiers.push_back(msgFilter);
 }
 
-bool MsgLogger::Log(const char* msg, int level) {
+bool MsgLogger::Log(const char* msg, int level, const char* sourceFile, int lineNum) {
     if (level > m_maxLevel)
         return true;
 
@@ -153,8 +153,12 @@ bool MsgLogger::Log(const char* msg, int level) {
 
     int tid = syscall(SYS_gettid);
 
-    char title[256];
-    size_t titleLen = snprintf(title, 256, "%s %02d:%02d:%02d.%06d%s%s%s%d%s", m_strLogDay.c_str(), hour, min, sec, (int)tvNow.tv_usec, m_sep.c_str(), m_levels[level], m_sep.c_str(), tid, m_sep.c_str());
+    char title[4096];
+    size_t titleLen;
+    if (sourceFile)
+        titleLen = snprintf(title, 4096, "%s %02d:%02d:%02d.%06d%s%s%s%d%s%s%s%d%s", m_strLogDay.c_str(), hour, min, sec, (int)tvNow.tv_usec, m_sep.c_str(), m_levels[level], m_sep.c_str(), tid, m_sep.c_str(), sourceFile, m_sep.c_str(), lineNum, m_sep.c_str());
+    else
+        titleLen = snprintf(title, 4096, "%s %02d:%02d:%02d.%06d%s%s%s%d%s", m_strLogDay.c_str(), hour, min, sec, (int)tvNow.tv_usec, m_sep.c_str(), m_levels[level], m_sep.c_str(), tid, m_sep.c_str());
 
     if (m_printToScreen) {
         if (level >= LOG_INFO)

@@ -63,7 +63,7 @@ public:
     // 记录日志
     // msg为日志消息
     // level为日志级别，默认为INFO级别
-    bool Log(const char* msg, int level = LOG_INFO);
+    bool Log(const char* msg, int level = LOG_INFO, const char* sourceFile = NULL, int lineNum = 0);
 
 protected:
     double GetMonotonicTime();

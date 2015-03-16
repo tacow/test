@@ -1,4 +1,4 @@
-#include "logger.h"
+#include "log_util.h"
 #include "GbToUtf8Modifier.h"
 #include "StrReplaceModifier.h"
 #include <stdlib.h>
@@ -29,20 +29,22 @@ void* LogThread(void* ptr) {
     for(int i = 0; i < LOG_TIMES; ++i) {
         string msg = GetRandStr(5) + "," + GetRandStr(9) + "," + GetRandStr(6);
         if (i % 100 == 0) {
-            g_logger1.Log(msg.c_str(), LOG_ERROR);
-            g_logger2.Log(msg.c_str(), LOG_WARNING);
+            VLog(g_logger1, LOG_ERROR, "%d: %s", i, msg.c_str());
+            VLog(g_logger2, LOG_WARNING, "%d: %s", i, msg.c_str());
         } else if (i % 3 == 0) {
-            g_logger1.Log("中文测试", LOG_NOTICE);
-            g_logger2.Log("测试中文", LOG_NOTICE);
+            VLog(g_logger1, LOG_NOTICE, "%d: 中文测试", i);
+            VLog(g_logger2, LOG_NOTICE, "%d: 测试中文", i);
         } else {
-            g_logger1.Log(msg.c_str());
-            g_logger2.Log(msg.c_str());
+            VLog(g_logger1, LOG_INFO, "%d: %s", i, msg.c_str());
+            VLog(g_logger2, LOG_INFO, "%d: %s", i, msg.c_str());
         }
     }
     return NULL;
 }
 
 int main() {
+    InitLogUtil();
+
     g_logger1.Init("test1", LOG_PATH);
     g_logger1.SetPrintToScreen();
     g_logger1.SetSeperator(",");
@@ -65,6 +67,8 @@ int main() {
 
     g_logger1.Close();
     g_logger2.Close();
+
+    DestroyLogUtil();
     return 0;
 }
 
