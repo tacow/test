@@ -1,41 +1,60 @@
 #include "Person.pb.h"
+#include "Team.pb.h"
 #include <stdio.h>
 
 int g_size = 0;
 char* g_buf = NULL;
 
 void WriteTest() {
-    Person person;
-    person.set_name("aaa");
-    person.set_age(25);
-    person.set_gender(Male);
-    person.set_married(true);
-    person.add_friends("bbb");
-    person.add_friends("ccc");
+    Team team;
+    team.set_name("ax");
 
-    g_size = person.ByteSize();
+    Person* person1 = team.add_persons();
+    person1->set_name("aaa");
+    person1->set_age(25);
+    person1->set_gender(Male);
+    person1->set_married(true);
+    person1->add_friends("bbb");
+    person1->add_friends("ccc");
+
+    Person* person2 = team.add_persons();
+    person2->set_name("xxx");
+    person2->set_age(20);
+    person2->set_gender(Female);
+    person2->set_married(false);
+    person2->add_friends("yyy");
+    person2->add_friends("zzz");
+
+    g_size = team.ByteSize();
     g_buf = new char[g_size];
-    if (!person.SerializeToArray(g_buf, g_size))
+    if (!team.SerializeToArray(g_buf, g_size))
         printf("Serialize failed\n");
 }
 
 void ReadTest() {
-    Person person;
-    if (!person.ParseFromArray(g_buf, g_size)) {
+    Team team;
+    if (!team.ParseFromArray(g_buf, g_size)) {
         printf("Parse failed\n");
         return;
     }
 
-    if (person.has_name())
-        printf("Name: %s\n", person.name().c_str());
-    if (person.has_age())
-        printf("Age: %u\n", person.age());
-    if (person.has_gender())
-        printf("Gender: %s\n", person.gender() == Male ? "Male" : "Female");
-    if (person.has_married())
-        printf("Married: %s\n", person.married() ? "True" : "False");
-    for(int i = 0; i < person.friends_size(); ++i)
-        printf("Friend %d: %s\n", i, person.friends(i).c_str());
+    if (team.has_name())
+        printf("Team name: %s\n", team.name().c_str());
+
+    for(int i = 0; i < team.persons_size(); ++i) {
+        const Person& person = team.persons(i);
+        printf("====================\n");
+        if (person.has_name())
+            printf("Name: %s\n", person.name().c_str());
+        if (person.has_age())
+            printf("Age: %u\n", person.age());
+        if (person.has_gender())
+            printf("Gender: %s\n", person.gender() == Male ? "Male" : "Female");
+        if (person.has_married())
+            printf("Married: %s\n", person.married() ? "True" : "False");
+        for(int j = 0; j < person.friends_size(); ++j)
+            printf("Friend %d: %s\n", j, person.friends(j).c_str());
+    }
 }
 
 int main() {

@@ -28,7 +28,7 @@ DESTINATION_RELEASE = pb_test
 # 目标文件名（Debug版）
 DESTINATION_DEBUG = pb_test_d
 # 开始编译之前执行的命令
-BEFORE_BUILD = protoc --cpp_out=. Person.proto; mv Person.pb.cc Person.pb.cpp
+BEFORE_BUILD = protoc --cpp_out=. Person.proto Team.proto; mv Person.pb.cc Person.pb.cpp; mv Team.pb.cc Team.pb.cpp
 # 编译Release版后执行的命令
 AFTER_BUILD_RELEASE = 
 # 编译Debug版后执行的命令

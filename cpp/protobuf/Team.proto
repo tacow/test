@@ -1,0 +1,7 @@
+import "Person.proto";
+
+message Team {
+    optional string name = 1;
+    repeated Person persons = 2;
+}
+
