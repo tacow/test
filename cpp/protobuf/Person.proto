@@ -1,0 +1,13 @@
+enum Gender {
+    Male = 1;
+    Female = 2;
+}
+
+message Person {
+    optional string name = 1;
+    optional int32 age = 2;
+    optional Gender gender = 3;
+    optional bool married = 4;
+    repeated string friends = 5;
+}
+
