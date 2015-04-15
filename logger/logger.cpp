@@ -1,4 +1,5 @@
 #include "logger.h"
+#include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
@@ -7,6 +8,10 @@
 #include <sys/stat.h>
 
 #define TZ_ADJUST (8 * 3600)    // 将UTC时间转换为东8区北京时间
+
+void DeleteMsgBuf(void* ptr) {
+    delete[] (char*)ptr;
+}
 
 MsgLogger::MsgLogger() {
     m_logFile = NULL;
@@ -33,12 +38,18 @@ MsgLogger::MsgLogger() {
     m_lastFailTime = 0.0;
 
     pthread_mutex_init(&m_mutex, NULL);
+
+    pthread_key_create(&m_msgBufKey, DeleteMsgBuf);
 }
 
 MsgLogger::~MsgLogger() {
+    pthread_key_delete(m_msgBufKey);
+
     Close();
 
     pthread_mutex_destroy(&m_mutex);
+
+    pthread_key_delete(m_msgBufKey);
 }
 
 bool MsgLogger::Init(const char* prefix, const char* logPath) {
@@ -105,7 +116,25 @@ void MsgLogger::AddMsgModifier(MsgModifier* msgFilter) {
     m_msgModifiers.push_back(msgFilter);
 }
 
-bool MsgLogger::Log(const char* msg, int level, const char* sourceFile, int lineNum) {
+bool MsgLogger::VLog(int level, const char* format, ...) {
+    if (level > m_maxLevel)
+        return true;
+
+    char* msgBuf = (char*)pthread_getspecific(m_msgBufKey);
+    if (!msgBuf) {
+        msgBuf = new char[MSG_BUF_SIZE];
+        pthread_setspecific(m_msgBufKey, msgBuf);
+    }
+
+    va_list ap;
+    va_start(ap, format);
+    vsnprintf(msgBuf, MSG_BUF_SIZE, format, ap);
+    va_end(ap);
+
+    return Log(msgBuf, level);
+}
+
+bool MsgLogger::Log(const char* msg, int level) {
     if (level > m_maxLevel)
         return true;
 
@@ -154,11 +183,7 @@ bool MsgLogger::Log(const char* msg, int level, const char* sourceFile, int line
     int tid = syscall(SYS_gettid);
 
     char title[4096];
-    size_t titleLen;
-    if (sourceFile)
-        titleLen = snprintf(title, 4096, "%s %02d:%02d:%02d.%06d%s%s%s%d%s%s%s%d%s", m_strLogDay.c_str(), hour, min, sec, (int)tvNow.tv_usec, m_sep.c_str(), m_levels[level], m_sep.c_str(), tid, m_sep.c_str(), sourceFile, m_sep.c_str(), lineNum, m_sep.c_str());
-    else
-        titleLen = snprintf(title, 4096, "%s %02d:%02d:%02d.%06d%s%s%s%d%s", m_strLogDay.c_str(), hour, min, sec, (int)tvNow.tv_usec, m_sep.c_str(), m_levels[level], m_sep.c_str(), tid, m_sep.c_str());
+    size_t titleLen = snprintf(title, 4096, "%s %02d:%02d:%02d.%06d%s%s%s%d%s", m_strLogDay.c_str(), hour, min, sec, (int)tvNow.tv_usec, m_sep.c_str(), m_levels[level], m_sep.c_str(), tid, m_sep.c_str());
 
     if (m_printToScreen) {
         if (level >= LOG_INFO)

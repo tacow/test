@@ -15,6 +15,10 @@ using namespace std;
 #define LOG_DEBUG    4
 #define LOG_VERBOSE  5
 
+#ifndef MSG_BUF_SIZE
+#define MSG_BUF_SIZE (1024 * 1024)
+#endif
+
 // 消息修改器接口
 class MsgModifier {
 public:
@@ -63,7 +67,9 @@ public:
     // 记录日志
     // msg为日志消息
     // level为日志级别，默认为INFO级别
-    bool Log(const char* msg, int level = LOG_INFO, const char* sourceFile = NULL, int lineNum = 0);
+    bool Log(const char* msg, int level = LOG_INFO);
+
+    bool VLog(int level, const char* format, ...);
 
 protected:
     double GetMonotonicTime();
@@ -95,6 +101,8 @@ protected:
     double m_lastFailTime;
 
     pthread_mutex_t m_mutex;
+
+    pthread_key_t m_msgBufKey;
 };
 
 #endif
