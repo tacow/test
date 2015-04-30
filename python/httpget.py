@@ -11,10 +11,13 @@ if len(sys.argv) < 3:
 else:
     path = sys.argv[2]
 
-conn = httplib.HTTPConnection(host)
-conn.request("GET", path)
-response = conn.getresponse()
-print response.status, response.reason
-print response.read()
-conn.close()
+try:
+    conn = httplib.HTTPConnection(host, timeout = 3)
+    conn.request("GET", path)
+    response = conn.getresponse()
+    print response.status, response.reason
+    print response.read()
+    conn.close()
+except Exception as e:
+    print "Exception:", e
 
