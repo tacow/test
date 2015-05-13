@@ -46,8 +46,8 @@ public:
     void Close();
 
     // 设置和获取最大日志文件长度，超过该长度将自动切分文件，默认为100M
-    void SetMaxFileLen(int maxFileLen = 104857600);
-    int  GetMaxFileLen();
+    void SetMaxFileLen(long maxFileLen = 104857600);
+    long GetMaxFileLen();
 
     // 设置和获取字段分隔符，默认为"|"
     void SetSeperator(const char* sep = "|");
@@ -81,8 +81,8 @@ protected:
     string m_historyFileNamePattern;
     FILE*  m_logFile;
 
-    int    m_maxFileLen;
-    int    m_fileLen;
+    long   m_maxFileLen;
+    long   m_fileLen;
 
     string m_sep;
 

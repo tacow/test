@@ -79,11 +79,11 @@ void MsgLogger::Close() {
     }
 }
 
-void MsgLogger::SetMaxFileLen(int maxFileLen) {
+void MsgLogger::SetMaxFileLen(long maxFileLen) {
     m_maxFileLen = maxFileLen;
 }
 
-int MsgLogger::GetMaxFileLen() {
+long MsgLogger::GetMaxFileLen() {
     return m_maxFileLen;
 }
 
