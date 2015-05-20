@@ -30,45 +30,46 @@ void TimevalDiff(struct timeval* tv1, struct timeval* tv2, struct timeval* diff)
     }
 }
 
-// interval应能够被3600整除
-void ClockSleep(time_t interval, time_t* lastTime) {
+// 休眠到时钟周期
+// interval为周期，单位秒，数值应能够被3600（1小时）整除
+// offset为偏移，单位秒，数值应小于interval，若无需偏移则传0
+// lastTime为内部状态变量，每次需传入，且第一次请求时设为0
+void ClockSleep(time_t interval, time_t offset, time_t* lastTime) {
     struct timeval now;
     gettimeofday(&now, NULL);
 
-    time_t nextTime;
-    if (now.tv_sec % interval == 0 && now.tv_usec == 0)
-        nextTime = now.tv_sec;
-    else
-        nextTime = (now.tv_sec / interval + 1) * interval;
+    struct timeval nextTime;
+    nextTime.tv_sec = now.tv_sec / interval * interval + offset;
+    nextTime.tv_usec = 0;
+
+    if (TimevalComp(&now, &nextTime) > 0)
+        nextTime.tv_sec += interval;
 
     if (*lastTime != 0) {
         time_t nextTime2 = *lastTime + interval;
-        if (nextTime2 > nextTime)
-            nextTime = nextTime2;
+        if (nextTime2 > nextTime.tv_sec)
+            nextTime.tv_sec = nextTime2;
     }
 
-    struct timeval nextTimeval;
-    nextTimeval.tv_sec = nextTime;
-    nextTimeval.tv_usec = 0;
-
     struct timeval waitTime;
-    TimevalDiff(&nextTimeval, &now, &waitTime);
+    TimevalDiff(&nextTime, &now, &waitTime);
     select(0, NULL, NULL, NULL, &waitTime);
-    *lastTime = nextTime;
+    *lastTime = nextTime.tv_sec;
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 2) {
+    if (argc < 3) {
         printf("Usage:\n");
-        printf("    %s [interval]\n", argv[0]);
+        printf("    %s [interval] [offset]\n", argv[0]);
         return 0;
     }
     time_t interval = atoi(argv[1]);
+    time_t offset   = atoi(argv[2]);
 
     time_t lastTime = 0;
     int i;
     for(i = 0; i < 10; ++i) {
-        ClockSleep(interval, &lastTime);
+        ClockSleep(interval, offset, &lastTime);
         printf("%d\n", i);
     }
     return 0;
