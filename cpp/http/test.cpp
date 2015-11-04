@@ -4,12 +4,30 @@
 #define CONTENT_BUF_SIZE (1024 * 1024)
 
 void HttpGetTest(const char* url) {
+    deque<HttpHeader> reqHeaders;
     deque<HttpHeader> resHeaders;
     char* contentBuf = new char[CONTENT_BUF_SIZE + 1];
 
+    HttpHeader header;
+    header.name = "User-Agent";
+    header.value = "Curl";
+    reqHeaders.push_back(header);
+
+    header.name = "Accept";
+    header.value = "text/html,*/*;q=0.8";
+    reqHeaders.push_back(header);
+
+    header.name = "Accept-Language";
+    header.value = "zh-CN,zh;q=0.8";
+    reqHeaders.push_back(header);
+
+    header.name = "Accept-Charset";
+    header.value = "gb18030,gb2312,gbk";
+    reqHeaders.push_back(header);
+
     string errMsg;
     HttpClient httpClient;
-    if (httpClient.HttpGet(url, NULL, &resHeaders, contentBuf, CONTENT_BUF_SIZE, 3)) {
+    if (httpClient.HttpGet(url, &reqHeaders, &resHeaders, contentBuf, CONTENT_BUF_SIZE, 3)) {
         long statusCode = httpClient.GetStatusCode();
         size_t contentLength = httpClient.GetContentLength();
         if (statusCode != 200) {
@@ -29,19 +47,24 @@ void HttpGetTest(const char* url) {
     if (!errMsg.empty()) {
         printf("Request URL %s failed: %s\n", url, errMsg.c_str());
     } else {
-        printf("Headers:\n");
+        printf("[Headers]\n");
         for(deque<HttpHeader>::iterator it = resHeaders.begin(); it != resHeaders.end(); ++it) {
             HttpHeader& header = *it;
             printf("\"%s\": \"%s\"\n", header.name.c_str(), header.value.c_str());
         }
-        printf("\nContent:\n%s", contentBuf);
+        printf("\n[Content]\n%s", contentBuf);
     }
 
     delete[] contentBuf;
 }
 
 int main() {
+    HttpClient::GlobalInit();
+
     HttpGetTest("http://nginx.org/");
+    HttpGetTest("http://www.baidu.com/");
+
+    HttpClient::GlobalCleanup();
     return 0;
 }
 
