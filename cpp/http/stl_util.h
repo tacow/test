@@ -88,6 +88,16 @@ string PtrContainerToString(Container& c, ToStringFunc& ToString, const char* se
     return oss.str();
 }
 
+template<class T>
+int Round(T x) {
+    return int(x + (T)0.5);
+}
+
+template<class T, class D>
+void Round(T x, D& i) {
+    i = (D)(x + (T)0.5);
+}
+
 string Trim(const string& str);
 
 #endif
