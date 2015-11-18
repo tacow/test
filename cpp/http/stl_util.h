@@ -89,6 +89,16 @@ string PtrContainerToString(Container& c, ToStringFunc& ToString, const char* se
 }
 
 template<class T>
+T Max(T x, T y) {
+    return (x > y) ? x : y;
+}
+
+template<class T>
+T Min(T x, T y) {
+    return (x < y) ? x : y;
+}
+
+template<class T>
 int Round(T x) {
     return int(x + (T)0.5);
 }
