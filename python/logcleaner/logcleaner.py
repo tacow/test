@@ -77,7 +77,7 @@ def CleanLog(logPath, config):
             continue
         fileInfo = FileInfo()
         fileInfo.name = fileName
-        fileInfo.path = os.path.join(logPath, fileName)
+        fileInfo.path = filePath
         fileInfo.size = os.path.getsize(filePath)
         fileInfos.append(fileInfo)
 
