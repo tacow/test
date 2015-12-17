@@ -6,6 +6,20 @@ import time
 
 LOG_POSTFIX = "_(\d\d\d\d\d\d\d\d\d\d\d\d\d\d).log"
 
+class FileInfo:
+    def __init__(self):
+        self.name = None
+        self.path = None
+        self.size = 0
+        self.time = 0
+
+    def __str__(self):
+        return "File name: %s, path: %s, size: %d, time: %d" % (self.name, self.path, self.size, self.time)
+
+    def __repr__(self):
+        return "{ %s }" % str(self)
+
+
 class PrefixInfo:
     def __init__(self):
         self.config = None
@@ -16,8 +30,8 @@ class PrefixInfo:
         if self.config:
             s = "Prefix: %s\n" % self.config[0]
         if self.curFile:
-            s += "Current log file:\n    %s: %d\n" % (self.curFile[0], self.curFile[2])
-        hisFileNames = "\n    ".join("%s: %d" % (hisFile[0], hisFile[2]) for hisFile in self.hisFiles)
+            s += "Current log file:\n    %s: %d\n" % (self.curFile.name, self.curFile.size)
+        hisFileNames = "\n    ".join("%s: %d" % (hisFile.name, hisFile.size) for hisFile in self.hisFiles)
         s += "History log files:\n    %s\n" % hisFileNames
         return s
 
@@ -61,8 +75,11 @@ def CleanLog(logPath, config):
         filePath = os.path.join(logPath, fileName)
         if not os.path.isfile(filePath):
             continue
-        fileSize = os.path.getsize(filePath)
-        fileInfos.append([fileName, filePath, fileSize, None])
+        fileInfo = FileInfo()
+        fileInfo.name = fileName
+        fileInfo.path = os.path.join(logPath, fileName)
+        fileInfo.size = os.path.getsize(filePath)
+        fileInfos.append(fileInfo)
 
     print "Log statistics:"
     print "=" * 50
@@ -78,16 +95,14 @@ def CleanLog(logPath, config):
         prefixInfo.curFile = None
         prefixInfo.hisFiles = []
         for fileInfo in fileInfos:
-            fileName = fileInfo[0]
-            if fileName == prefix + ".log":
+            if fileInfo.name == prefix + ".log":
                 prefixInfo.curFile = fileInfo
                 continue
-            res = re.match(hisFilePattern, fileName)
+            res = re.match(hisFilePattern, fileInfo.name)
             if res:
-                fileTime = time.strptime(res.group(1), "%Y%m%d%H%M%S")
-                fileInfo[3] = time.mktime(fileTime)
+                fileInfo.time = time.mktime(time.strptime(res.group(1), "%Y%m%d%H%M%S"))
                 prefixInfo.hisFiles.append(fileInfo)
-        prefixInfo.hisFiles.sort(key = lambda hisFile: hisFile[0], reverse = True)
+        prefixInfo.hisFiles.sort(key = lambda hisFile: hisFile.name, reverse = True)
         prefixInfos.append(prefixInfo)
 
         if firstPrefix:
@@ -107,24 +122,23 @@ def CleanLog(logPath, config):
         exceeded = False
         totalSize = 0
         if prefixInfo.curFile:
-            totalSize += prefixInfo.curFile[2]
+            totalSize += prefixInfo.curFile.size
 
         for hisFile in prefixInfo.hisFiles:
             if not exceeded:
-                totalSize += hisFile[2]
+                totalSize += hisFile.size
                 if megabytes > 0 and totalSize > megabytes * 1024 * 1024:
                     exceeded = True
-                    print "File size exceeded"
-                elif hours > 0 and now - hisFile[3] > hours * 3600:
+                    print "Found file size exceeded"
+                elif hours > 0 and now - hisFile.time > hours * 3600:
                     exceeded = True
-                    print "File time exceeded"
+                    print "Found file time exceeded"
 
             if exceeded:
-                os.remove(hisFile[1])
-                print "Remove %s" % hisFile[0]
+                os.remove(hisFile.path)
+                print "Remove %s" % hisFile.name
             else:
-                print "%s OK" % hisFile[0]
-
+                print "%s pass" % hisFile.name
         print
 
 if len(sys.argv) < 3:
