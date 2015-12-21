@@ -14,9 +14,9 @@ class Coor:
 class Point:
     def __init__(self):
         self.coor = Coor()
-        self.attrs = []
+        self.attrs = {}
     def __str__(self):
-        attrsStr = ", ".join(self.attrs)
+        attrsStr = ", ".join("%s: %s" % (keyval[0], keyval[1]) for keyval in self.attrs.items())
         return "[Point %s | attributes: %s]" % (self.coor, attrsStr)
     def __repr__(self):
         return str(self)
@@ -25,9 +25,9 @@ class Line:
     def __init__(self):
         self.coor1 = Coor()
         self.coor2 = Coor()
-        self.attrs = []
+        self.attrs = {}
     def __str__(self):
-        attrsStr = ", ".join(self.attrs)
+        attrsStr = ", ".join("%s: %s" % (keyval[0], keyval[1]) for keyval in self.attrs.items())
         return "[Line %s - %s | attributes: %s]" % (self.coor1, self.coor2, attrsStr)
     def __repr__(self):
         return str(self)
@@ -35,10 +35,10 @@ class Line:
 class Pline:
     def __init__(self):
         self.coors = []
-        self.attrs = []
+        self.attrs = {}
     def __str__(self):
         coorsStr = ", ".join(str(coor) for coor in self.coors)
-        attrsStr = ", ".join(self.attrs)
+        attrsStr = ", ".join("%s: %s" % (keyval[0], keyval[1]) for keyval in self.attrs.items())
         return "[Pline %s | attributes: %s]" % (coorsStr, attrsStr)
     def __repr__(self):
         return str(self)
@@ -51,41 +51,43 @@ class MifInfo:
         self.lines = []
         self.plines = []
     def __str__(self):
-        s = "Attributes\n"
-        s += "-" * 50
-        s += "\n"
-        s += "\n".join(self.attrNames)
+        sections = []
         if self.points:
-            s += "\n\nPoints\n"
-            s += "-" * 50
-            s += "\n"
-            s += "\n".join(str(point) for point in self.points)
+            pointsStr = "Points\n"
+            pointsStr += "-" * 50
+            pointsStr += "\n"
+            pointsStr += "\n".join(str(point) for point in self.points)
+            sections.append(pointsStr)
         if self.lines:
-            s += "\n\nLines\n"
-            s += "-" * 50
-            s += "\n"
-            s += "\n".join(str(line) for line in self.lines)
+            linesStr = "Lines\n"
+            linesStr += "-" * 50
+            linesStr += "\n"
+            linesStr += "\n".join(str(line) for line in self.lines)
+            sections.append(linesStr)
         if self.plines:
-            s += "\n\nPlines\n"
-            s += "-" * 50
-            s += "\n"
-            s += "\n".join(str(pline) for pline in self.plines)
-        return s
+            plinesStr = "Plines\n"
+            plinesStr += "-" * 50
+            plinesStr += "\n"
+            plinesStr += "\n".join(str(pline) for pline in self.plines)
+            sections.append(plinesStr)
+        return "\n\n".join(sections)
     def __repr__(self):
         return str(self)
 
-def ReadAttrs(midF):
-    attrs = []
+def ReadAttrs(midF, attrNames):
+    attrs = {}
     line = midF.readline()
     line = line.strip()
     tokens = line.split(",")
-    for token in tokens:
+    for i in xrange(len(tokens)):
+        attrName = attrNames[i]
+        token = tokens[i]
         res = re.match("\"(.*)\"", token)
         if res:
             attr = res.group(1)
         else:
             attr = token
-        attrs.append(attr)
+        attrs[attrName] = attr
     return attrs
     
 def ReadMif(mifFile, midFile):
@@ -118,7 +120,7 @@ def ReadMif(mifFile, midFile):
             point.coor.lon = float(tokens[1])
             point.coor.lat = float(tokens[2])
             mifF.readline()
-            point.attrs = ReadAttrs(midF)
+            point.attrs = ReadAttrs(midF, mifInfo.attrNames)
             mifInfo.points.append(point)
         elif type == "Line":
             line = Line()
@@ -127,7 +129,7 @@ def ReadMif(mifFile, midFile):
             line.coor2.lon = float(tokens[3])
             line.coor2.lat = float(tokens[4])
             mifF.readline()
-            line.attrs = ReadAttrs(midF)
+            line.attrs = ReadAttrs(midF, mifInfo.attrNames)
             mifInfo.lines.append(line)
         elif type == "Pline":
             pline = Pline()
@@ -141,7 +143,7 @@ def ReadMif(mifFile, midFile):
                 coor.lat = float(tokens[1])
                 pline.coors.append(coor)
             mifF.readline()
-            pline.attrs = ReadAttrs(midF)
+            pline.attrs = ReadAttrs(midF, mifInfo.attrNames)
             mifInfo.plines.append(pline)
         else:
             print "Unknown type: %s" % type
