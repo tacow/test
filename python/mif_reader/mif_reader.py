@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import sys
 import re
 
 class Coor:
@@ -87,7 +86,10 @@ def ReadAttrs(midF, attrNames):
     line = midF.readline()
     line = line.strip()
     tokens = line.split(",")
-    for i in xrange(len(tokens)):
+    attrNum = len(tokens)
+    if attrNum != len(attrNames):
+        raise Exception("Attributes number mismatch: %s" % line)
+    for i in xrange(attrNum):
         attrName = attrNames[i]
         token = tokens[i]
         res = re.match("\"(.*)\"", token)
@@ -120,8 +122,6 @@ def ReadMif(mifFile, midFile):
             break
         line = line.strip()
         tokens = line.split(" ")
-        if len(tokens) == 0:
-            continue
         type = tokens[0]
         if type == "" or type == "Version" or type == "Charset" or type == "Delimiter" or type == "CoordSys" or type == "Data":
             continue
@@ -133,7 +133,7 @@ def ReadMif(mifFile, midFile):
                 line = line.strip()
                 tokens = line.split(" ", 1)
                 if len(tokens) < 2:
-                    continue
+                    raise Exception("Invalid column: %s" % line)
                 attrName = tokens[0]
                 attrType = tokens[1]
                 mifInfo.attrNames.append(attrName)
@@ -169,8 +169,7 @@ def ReadMif(mifFile, midFile):
             pline.attrs = ReadAttrs(midF, mifInfo.attrNames)
             mifInfo.plines.append(pline)
         else:
-            print "Unknown type: %s" % type
-            sys.exit()
+            raise Exception("Unknown type: %s" % type)
     mifF.close()
     midF.close()
     return mifInfo
@@ -209,16 +208,4 @@ def WriteMif(mifInfo, mifFile, midFile):
 
     mifF.close()
     midF.close()
-
-if len(sys.argv) < 2:
-    print "Usage:\n\t%s [MIF file] [MID file]" % sys.argv[0]
-    sys.exit()
-mifFile = sys.argv[1]
-midFile = sys.argv[2]
-
-try:
-    mifInfo = ReadMif(mifFile, midFile)
-    WriteMif(mifInfo, "new.MIF", "new.MID")
-except Exception, e:
-    print e
 
