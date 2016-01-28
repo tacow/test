@@ -2,8 +2,11 @@
 
 from xml.etree import ElementTree
 
-tree = ElementTree.parse('country_data.xml')
-root = tree.getroot()
+f = open('country_data.xml')
+xml = f.read()
+f.close()
+
+root = ElementTree.fromstring(xml)
 for country in root.findall('country'):
     country.set('name', 'China')
 
