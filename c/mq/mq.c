@@ -41,6 +41,7 @@ void mq_cleanup(mq_t* mq) {
         chunk_t* next_chunk;
 
         next_chunk = chunk->next;
+        free(chunk->nodes);
         free(chunk);
         chunk = next_chunk;
     }
