@@ -87,8 +87,8 @@ void* mq_pop(mq_t* mq) {
     mq->queue.next = head->next;
     head->next->prev = &mq->queue;
 
-    head->next = mq->free_nodes->next;
-    mq->free_nodes->next = head;
+    head->next = mq->free_nodes;
+    mq->free_nodes = head;
 
     pthread_mutex_unlock(&mq->mutex);
     return msg;
