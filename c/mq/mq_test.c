@@ -2,7 +2,7 @@
 #include "mq.h"
 
 #define SEND_THREAD_NUM 10
-#define SEND_TIMES      100000
+#define SEND_TIMES      1000000
 
 #define RECV_THREAD_NUM 5
 #define RECV_TIMES      (SEND_TIMES * SEND_THREAD_NUM / RECV_THREAD_NUM)
@@ -12,16 +12,22 @@ mq_t mq;
 void* SendThread(void* arg) {
     long tid;
     long i;
+    char filename[256];
+    FILE* f;
 
     tid = (long)arg;
+    snprintf(filename, 256, "send_%ld.txt", tid);
+    f = fopen(filename, "w");
     printf("Sender %ld start\n", tid);
 
     for(i = 0; i < SEND_TIMES; ++i) {
         long msg = tid * SEND_TIMES + i;
         mq_push(&mq, (void*)msg);
+        fprintf(f, "%ld\n", msg);
     }
 
     printf("Sender %ld finish\n", tid);
+    fclose(f);
     return NULL;
 }
 
