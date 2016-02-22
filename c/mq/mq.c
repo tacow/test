@@ -50,7 +50,6 @@ void mq_cleanup(mq_t* mq) {
 void mq_push(mq_t* mq, void* msg) {
     mq_node_t* node;
     mq_node_t* tail;
-    int queue_empty;
 
     pthread_mutex_lock(&mq->mutex);
 
@@ -60,17 +59,15 @@ void mq_push(mq_t* mq, void* msg) {
     mq->free_nodes = node->next;
 
     tail = mq->queue.prev;
-    queue_empty = (tail == &mq->queue);
     node->msg = msg;
     node->next = tail->next;
     node->prev = tail;
     tail->next = node;
     mq->queue.prev = node;
 
-    if (queue_empty)
-        pthread_cond_signal(&mq->cond);
-
     pthread_mutex_unlock(&mq->mutex);
+
+    pthread_cond_signal(&mq->cond);
 }
 
 void* mq_pop(mq_t* mq) {
@@ -79,7 +76,7 @@ void* mq_pop(mq_t* mq) {
 
     pthread_mutex_lock(&mq->mutex);
 
-    if (mq->queue.next == &mq->queue)
+    while(mq->queue.next == &mq->queue)
         pthread_cond_wait(&mq->cond, &mq->mutex);
 
     head = mq->queue.next;
