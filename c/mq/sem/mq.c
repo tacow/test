@@ -74,7 +74,8 @@ void* mq_pop(mq_t* mq) {
     mq_node_t* head;
     void* msg;
 
-    sem_wait(&mq->sem);
+    while(sem_wait(&mq->sem) != 0) {
+    }
 
     pthread_mutex_lock(&mq->mutex);
 
