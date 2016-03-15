@@ -5,57 +5,24 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <sys/time.h>
+#include <sys/types.h>
 
 class FunctionProfiler {
 public:
-    FunctionProfiler(const char* functionName) {
-        m_functionName = functionName;
-        m_blockName = NULL;
-        gettimeofday(&m_functionStartTime, NULL);
-        int tid = syscall(SYS_gettid);
-        fprintf(g_logFile, "%ld.%06ld #%d ==> %s\n", (long)m_functionStartTime.tv_sec, (long)m_functionStartTime.tv_usec, tid, functionName);
-    }
+    FunctionProfiler(const char* functionName);
+    ~FunctionProfiler();
 
-    ~FunctionProfiler() {
-        timeval functionEndTime;
-        gettimeofday(&functionEndTime, NULL);
-        long consumedTime = (functionEndTime.tv_sec - m_functionStartTime.tv_sec) * 1000000 + (functionEndTime.tv_usec - m_functionStartTime.tv_usec);
-        int tid = syscall(SYS_gettid);
-        fprintf(g_logFile, "%ld.%06ld #%d <== %s %ld\n", (long)functionEndTime.tv_sec, (long)functionEndTime.tv_usec, tid, m_functionName, consumedTime);
-    }
+    void EnterBlock(const char* blockName);
+    void ExitBlock(const char* blockName);
 
-    void EnterBlock(const char* blockName) {
-        m_blockName = blockName;
-        gettimeofday(&m_blockStartTime, NULL);
-        int tid = syscall(SYS_gettid);
-        fprintf(g_logFile, "%ld.%06ld #%d --> %s_%s\n", (long)m_blockStartTime.tv_sec, (long)m_blockStartTime.tv_usec, tid, m_functionName, blockName);
-    }
+    static void Init(const char* logFilePrefix);
 
-    void ExitBlock(const char* blockName) {
-        if (!m_blockName || strcmp(blockName, m_blockName) != 0)
-            return;
-
-        timeval blockEndTime;
-        gettimeofday(&blockEndTime, NULL);
-        long consumedTime = (blockEndTime.tv_sec - m_blockStartTime.tv_sec) * 1000000 + (blockEndTime.tv_usec - m_blockStartTime.tv_usec);
-        int tid = syscall(SYS_gettid);
-        fprintf(g_logFile, "%ld.%06ld #%d <-- %s_%s %ld\n", (long)blockEndTime.tv_sec, (long)blockEndTime.tv_usec, tid, m_functionName, blockName, consumedTime);
-
-        m_blockName = NULL;
-    }
-
-    static bool Init(const char* logFile) {
-        g_logFile = fopen(logFile, "w");
-        return (g_logFile != NULL);
-    }
-
-    static void Close() {
-        if (g_logFile)
-            fclose(g_logFile);
-    }
+private:
+    FILE* GetLogFile();
 
 private:
     const char* m_functionName;
@@ -64,11 +31,11 @@ private:
     const char* m_blockName;
     timeval m_blockStartTime;
 
-    static FILE* g_logFile;
+    static const char* g_logFilePrefix;
+    static pthread_key_t g_logFileKey;
 };
 
 #define FUNCTION_PROFILER_INIT(logFile) FunctionProfiler::Init(logFile)
-#define FUNCTION_PROFILER_CLOSE() FunctionProfiler::Close()
 
 #define FUNCTION_PROFILE(functionName) FunctionProfiler functionProfiler(functionName)
 
@@ -78,7 +45,6 @@ private:
 #else
 
 #define FUNCTION_PROFILER_INIT(logFile)
-#define FUNCTION_PROFILER_CLOSE()
 
 #define FUNCTION_PROFILE(functionName)
 
