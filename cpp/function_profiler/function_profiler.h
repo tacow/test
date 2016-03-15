@@ -14,9 +14,9 @@ public:
     FunctionProfiler(const char* functionName) {
         m_functionName = functionName;
         m_blockName = NULL;
-        int tid = syscall(SYS_gettid);
-        fprintf(g_logFile, "#%d ==> %s\n", tid, functionName);
         gettimeofday(&m_functionStartTime, NULL);
+        int tid = syscall(SYS_gettid);
+        fprintf(g_logFile, "%ld.%06ld #%d ==> %s\n", (long)m_functionStartTime.tv_sec, (long)m_functionStartTime.tv_usec, tid, functionName);
     }
 
     ~FunctionProfiler() {
@@ -24,14 +24,14 @@ public:
         gettimeofday(&functionEndTime, NULL);
         long consumedTime = (functionEndTime.tv_sec - m_functionStartTime.tv_sec) * 1000000 + (functionEndTime.tv_usec - m_functionStartTime.tv_usec);
         int tid = syscall(SYS_gettid);
-        fprintf(g_logFile, "#%d <== %s %ld\n", tid, m_functionName, consumedTime);
+        fprintf(g_logFile, "%ld.%06ld #%d <== %s %ld\n", (long)functionEndTime.tv_sec, (long)functionEndTime.tv_usec, tid, m_functionName, consumedTime);
     }
 
     void EnterBlock(const char* blockName) {
         m_blockName = blockName;
-        int tid = syscall(SYS_gettid);
-        fprintf(g_logFile, "#%d --> %s_%s\n", tid, m_functionName, blockName);
         gettimeofday(&m_blockStartTime, NULL);
+        int tid = syscall(SYS_gettid);
+        fprintf(g_logFile, "%ld.%06ld #%d --> %s_%s\n", (long)m_blockStartTime.tv_sec, (long)m_blockStartTime.tv_usec, tid, m_functionName, blockName);
     }
 
     void ExitBlock(const char* blockName) {
@@ -42,7 +42,7 @@ public:
         gettimeofday(&blockEndTime, NULL);
         long consumedTime = (blockEndTime.tv_sec - m_blockStartTime.tv_sec) * 1000000 + (blockEndTime.tv_usec - m_blockStartTime.tv_usec);
         int tid = syscall(SYS_gettid);
-        fprintf(g_logFile, "#%d <-- %s_%s %ld\n", tid, m_functionName, blockName, consumedTime);
+        fprintf(g_logFile, "%ld.%06ld #%d <-- %s_%s %ld\n", (long)blockEndTime.tv_sec, (long)blockEndTime.tv_usec, tid, m_functionName, blockName, consumedTime);
 
         m_blockName = NULL;
     }
