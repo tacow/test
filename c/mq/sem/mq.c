@@ -1,50 +1,19 @@
-#include <stdlib.h>
 #include "mq.h"
 
-#define CHUNK_SIZE (1024 * 1024)
-#define CHUNK_NODES (CHUNK_SIZE / sizeof(mq_node_t))
-
-void mq_addchunk(mq_t* mq) {
-    chunk_t* chunk;
-    int i;
-
-    chunk = malloc(sizeof(chunk_t));
-    chunk->nodes = malloc(CHUNK_SIZE);
-    for(i = 0; i < CHUNK_NODES - 1; ++i)
-        chunk->nodes[i].next = &chunk->nodes[i + 1];
-    mq->free_nodes = &chunk->nodes[0];
-    chunk->nodes[CHUNK_NODES - 1].next = NULL;
-
-    chunk->next = mq->chunks;
-    mq->chunks = chunk;
-}
+#define MQ_CHUNK_SIZE (1024 * 1024)
 
 void mq_init(mq_t* mq) {
     pthread_mutex_init(&mq->mutex, NULL);
     sem_init(&mq->sem, 0, 0);
     mq->queue.next = &mq->queue;
     mq->queue.prev = &mq->queue;
-    mq->free_nodes = NULL;
-    mq->chunks = NULL;
-
-    mq_addchunk(mq);
+    mem_pool_init(&mq->mem_pool, sizeof(mq_node_t), MQ_CHUNK_SIZE);
 }
 
 void mq_cleanup(mq_t* mq) {
-    chunk_t* chunk;
-
     pthread_mutex_destroy(&mq->mutex);
     sem_destroy(&mq->sem);
-
-    chunk = mq->chunks;
-    while(chunk) {
-        chunk_t* next_chunk;
-
-        next_chunk = chunk->next;
-        free(chunk->nodes);
-        free(chunk);
-        chunk = next_chunk;
-    }
+    mem_pool_cleanup(&mq->mem_pool);
 }
 
 void mq_push(mq_t* mq, void* msg) {
@@ -53,10 +22,7 @@ void mq_push(mq_t* mq, void* msg) {
 
     pthread_mutex_lock(&mq->mutex);
 
-    if (!mq->free_nodes)
-        mq_addchunk(mq);
-    node = mq->free_nodes;
-    mq->free_nodes = node->next;
+    node = mem_pool_alloc(&mq->mem_pool);
 
     tail = mq->queue.prev;
     node->msg = msg;
@@ -84,8 +50,7 @@ void* mq_pop(mq_t* mq) {
     mq->queue.next = head->next;
     head->next->prev = &mq->queue;
 
-    head->next = mq->free_nodes;
-    mq->free_nodes = head;
+    mem_pool_free(&mq->mem_pool, head);
 
     pthread_mutex_unlock(&mq->mutex);
     return msg;

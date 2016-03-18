@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include <semaphore.h>
+#include "mem_pool.h"
 
 typedef struct mq_node_s mq_node_t;
 
@@ -12,13 +13,6 @@ struct mq_node_s {
     void* msg;
 };
 
-typedef struct chunk_s chunk_t;
-
-struct chunk_s {
-    chunk_t* next;
-    mq_node_t* nodes;
-};
-
 typedef struct mq_s mq_t;
 
 struct mq_s {
@@ -26,8 +20,7 @@ struct mq_s {
     sem_t sem;
 
     mq_node_t queue;
-    mq_node_t* free_nodes;
-    chunk_t* chunks;
+    mem_pool_t mem_pool;
 };
 
 void mq_init(mq_t* mq);
