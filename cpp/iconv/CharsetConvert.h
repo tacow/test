@@ -11,13 +11,16 @@ public:
     CharsetConvert();
     ~CharsetConvert();
 
-    bool Init(const char* fromCharset, const char* toCharset, size_t bufSize = 1024 * 1024);
+    bool Init(const char* toCharset, const char* fromCharset, size_t bufSize = 1024 * 1024);
+
+    char* Convert(char* fromStr, size_t fromStrLen = size_t(-1), size_t* toStrLen = NULL);
     bool Convert(const string& fromStr, string& toStr);
 
 private:
     iconv_t m_cd;
 
-    char*  m_buf;
+    char*  m_fromBuf;
+    char*  m_toBuf;
     size_t m_bufSize;
 };
 

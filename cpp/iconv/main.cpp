@@ -27,7 +27,7 @@ bool WriteFile(const char* filename, const string& content) {
 int main(int argc, char* argv[]) {
     CharsetConvert convertor;
 
-    if (!convertor.Init("GB18030", "UTF-8", 4096)) {
+    if (!convertor.Init("UTF-8", "GB18030")) {
         printf("Convertor initialize failed\n");
         return 0;
     }
