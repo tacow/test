@@ -6,7 +6,7 @@ CharsetConvert::CharsetConvert() {
 
     m_fromBuf = NULL;
     m_toBuf = NULL;
-	m_bufSize = 0;
+    m_bufSize = 0;
 }
 
 CharsetConvert::~CharsetConvert() {
