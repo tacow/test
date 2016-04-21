@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "logger.h"
+#include "MsgLogger.h"
 
 MsgLogger::MsgLogger() {
     m_logFile = NULL;

@@ -1,5 +1,5 @@
-#ifndef LOGGER_H
-#define LOGGER_H
+#ifndef MSG_LOGGER_H
+#define MSG_LOGGER_H
 
 #include <string>
 #include "MsgQueue.h"
