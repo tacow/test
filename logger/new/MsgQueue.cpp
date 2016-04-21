@@ -49,3 +49,19 @@ void* MsgQueue::Pop() {
     return msg;
 }
 
+bool MsgQueue::GetNext(void*& msg, void*& iter) {
+    MsgQueueNode* node;
+    if (iter == NULL)
+        node = &m_queue;
+    else
+        node = (MsgQueueNode*)iter;
+
+    if (node->next == &m_queue)
+        return false;
+
+    node = node->next;
+    msg = node->msg;
+    iter = node;
+    return true;
+}
+
