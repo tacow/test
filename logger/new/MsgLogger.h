@@ -2,6 +2,7 @@
 #define MSG_LOGGER_H
 
 #include <string>
+#include "CharsetConvert.h"
 #include "MsgQueue.h"
 
 using namespace std;
@@ -33,17 +34,24 @@ public:
     void Init(const char* prefix, const char* logPath = ".", int maxFileLen = 104857600); 
 
     // 关闭日志
-    void Close();
+    void Close(bool immediate = false);
 
     // 设置和获取在屏幕上输出日志类型
     // 0代表不输出到屏幕，1代表输出到stdout，2代表输出到stderr，默认为不输出
     int GetPrintToScreen();
     void SetPrintToScreen(int printToScreen = 1);
 
+    // 设置字符集转换
+    // 若toCharset或fromCharset为NULL，则清除原有字符集转换设置
+    // 返回设置是否成功
+    bool SetCharsetConvert(const char* toCharset, const char* fromCharset);
+
     // 输出日志
     void Log(IMsg* msg);
 
 private:
+    void ClearCharsetConvert();
+
     static void* WriterThreadS(void* ptr);
     void WriterThread();
 
@@ -61,8 +69,9 @@ private:
     long   m_fileLen;
 
     int    m_printToScreen;
-    
+
     char*  m_msgBuf;
+    CharsetConvert* m_convertor;
 
     bool   m_failed;
     double m_lastFailTime;

@@ -1,6 +1,6 @@
 #include "MemPool.h"
 
-MemPool::MemPool(size_t elemSize, size_t chunkSize) {
+MemPool::MemPool(size_t elemSize, size_t chunkSize, void (*ctor)(void*), void (*dtor)(void*)) {
     if (elemSize < sizeof(MemPoolElem))
         elemSize = sizeof(MemPoolElem);
 
@@ -11,6 +11,9 @@ MemPool::MemPool(size_t elemSize, size_t chunkSize) {
     m_chunks = NULL;
 
     AddChunk();
+
+    m_ctor = ctor;
+    m_dtor = dtor;
 }
 
 MemPool::~MemPool() {
@@ -30,10 +33,15 @@ void* MemPool::Alloc() {
     MemPoolElem* elem = m_freeElems;
     m_freeElems = elem->next;
 
+    if (m_ctor)
+        m_ctor(elem);
     return elem;
 }
 
 void MemPool::Free(void* p) {
+    if (m_dtor)
+        m_dtor(p);
+
     MemPoolElem* elem = (MemPoolElem*)p;
     elem->next = m_freeElems;
     m_freeElems = elem;

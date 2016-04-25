@@ -9,6 +9,7 @@ MsgLogger::MsgLogger() {
     m_printToScreen = 0;
 
     m_msgBuf = new char[MAX_MSG_LEN];
+    m_convertor = NULL;
 
     m_failed = false;
     m_lastFailTime = 0.0;
@@ -17,8 +18,9 @@ MsgLogger::MsgLogger() {
 }
 
 MsgLogger::~MsgLogger() {
-    Close();
+    Close(true);
 
+    ClearCharsetConvert();
     delete[] m_msgBuf;
 }
 
@@ -30,14 +32,16 @@ void MsgLogger::Init(const char* prefix, const char* logPath, int maxFileLen) {
 
     m_maxFileLen = maxFileLen;
 
+    m_stoped = false;
     pthread_create(&m_writerThread, NULL, MsgLogger::WriterThreadS, this);
 }
 
-void MsgLogger::Close() {
+void MsgLogger::Close(bool immediate) {
     if (m_stoped)
         return;
 
-    m_stoped = true;
+    if (immediate)
+        m_stoped = true;
     m_msgQueue.Push(NULL);
     pthread_join(m_writerThread, NULL);
 }
@@ -48,6 +52,27 @@ void MsgLogger::SetPrintToScreen(int printToScreen) {
 
 int MsgLogger::GetPrintToScreen() {
     return m_printToScreen;
+}
+
+void MsgLogger::ClearCharsetConvert() {
+    if (m_convertor) {
+        delete m_convertor;
+        m_convertor = NULL;
+    }
+}
+
+bool MsgLogger::SetCharsetConvert(const char* toCharset, const char* fromCharset) {
+    ClearCharsetConvert();
+
+    if (!toCharset || !fromCharset)
+        return true;
+
+    m_convertor = new CharsetConvert();
+    if (!m_convertor->Init(toCharset, fromCharset, MAX_MSG_LEN)) {
+        ClearCharsetConvert();
+        return false;
+    }
+    return true;
 }
 
 void MsgLogger::Log(IMsg* msg) {
@@ -61,6 +86,8 @@ void* MsgLogger::WriterThreadS(void* ptr) {
 }
 
 void MsgLogger::WriterThread() {
+    DivideLogFile();
+
     while(!m_stoped) {
         IMsg* msg = (IMsg*)m_msgQueue.Pop();
         if (msg == NULL)
@@ -69,11 +96,22 @@ void MsgLogger::WriterThread() {
         size_t len = msg->ToStr(m_msgBuf, MAX_MSG_LEN);
         msg->Release();
 
+        char*  msgBuf;
+        size_t msgLen;
+        if (!m_convertor) {
+            msgBuf = m_msgBuf;
+            msgLen = len;
+        } else {
+            msgBuf = m_convertor->Convert(m_msgBuf, len, &msgLen);
+            if (!msgBuf)
+                continue;
+        }
+
         if (m_printToScreen == 1)
-            fwrite(m_msgBuf, 1, len, stdout);
+            fwrite(msgBuf, 1, msgLen, stdout);
 
         if (m_printToScreen == 2)
-            fwrite(m_msgBuf, 1, len, stderr);
+            fwrite(msgBuf, 1, msgLen, stderr);
 
         if (m_failed) {
             if (GetMonotonicTime() >= m_lastFailTime + 1.0) {
@@ -93,7 +131,7 @@ void MsgLogger::WriterThread() {
         }
 
         if (succ) {
-            succ = (len == fwrite(m_msgBuf, 1, len, m_logFile));
+            succ = (len == fwrite(msgBuf, 1, msgLen, m_logFile));
             m_fileLen += len;
         }
 
@@ -119,6 +157,7 @@ void MsgLogger::WriterThread() {
         IMsg* msg = (IMsg*)ptr;
         msg->Release();
     }
+    m_stoped = true;
 }
 
 double MsgLogger::GetMonotonicTime() {
