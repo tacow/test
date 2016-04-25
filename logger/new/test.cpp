@@ -10,7 +10,7 @@ void* ThreadFunc(void* arg) {
     long tid = (long)arg;
 
     for(long i = 0; i < LOG_TIMES; ++i) {
-        logger.VLog(LOG_INFO, "%ld %ld", tid, i);
+        VLog(logger, LOG_INFO, "%ld,%ld", tid, i);
     }
 
     printf("Thread %ld finish\n", tid);

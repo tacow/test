@@ -58,7 +58,7 @@ public:
     int  GetMaxLevel();
     void SetMaxLevel(int level);
 
-    void VLog(int level, const char* format, ...);
+    void Log(int level, const char* format, ...);
     
     const char* GetDateStr(time_t ttTime);
     void RleaseMsg(FTMsg* msg);
@@ -73,6 +73,9 @@ private:
     MemPool m_msgStructPool;
     pthread_mutex_t m_poolMutex;
 };
+
+#define VLog(logger, level, format, ...) \
+    logger.Log(level, format ",%s:%d", ##__VA_ARGS__, __FILE__, __LINE__)
 
 #endif
 
