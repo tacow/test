@@ -88,6 +88,9 @@ int FTLogger::GetMaxLevel() {
 }
 
 void FTLogger::Log(int level, const char* format, ...) {
+    if (level > m_maxLevel)
+        return;
+
     pthread_mutex_lock(&m_poolMutex);
     char* msgBuf = (char*)m_msgBufPool.Alloc();
     FTMsg* msg = (FTMsg*)m_msgStructPool.Alloc();
