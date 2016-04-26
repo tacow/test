@@ -131,8 +131,8 @@ void MsgLogger::WriterThread() {
         }
 
         if (succ) {
-            succ = (len == fwrite(msgBuf, 1, msgLen, m_logFile));
-            m_fileLen += len;
+            succ = (msgLen == fwrite(msgBuf, 1, msgLen, m_logFile));
+            m_fileLen += msgLen;
         }
 
         if (succ)
