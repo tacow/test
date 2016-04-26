@@ -51,7 +51,7 @@ public:
     FTLogger();
     ~FTLogger();
 
-    void Init(const char* prefix, const char* logPath);
+    bool Init(const char* prefix, const char* logPath);
     void Close(bool immediate = false);
 
     // 设置和获取最大日志级别，默认为INFO级别

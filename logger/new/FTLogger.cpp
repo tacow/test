@@ -68,9 +68,11 @@ FTLogger::~FTLogger() {
     pthread_mutex_destroy(&m_poolMutex);
 }
 
-void FTLogger::Init(const char* prefix, const char* logPath) {
+bool FTLogger::Init(const char* prefix, const char* logPath) {
+    if (!m_msgLogger.SetCharsetConvert("UTF-8", "GB18030"))
+        return false;
     m_msgLogger.Init(prefix, logPath);
-    m_msgLogger.SetCharsetConvert("UTF-8", "GB18030");
+    return true;
 }
 
 void FTLogger::Close(bool immediate) {
@@ -94,6 +96,7 @@ void FTLogger::Log(int level, const char* format, ...) {
     va_list ap;
     va_start(ap, format);
     int len = vsnprintf(msgBuf, MSG_BUF_SIZE, format, ap);
+    va_end(ap);
     if (len <= MSG_BUF_SIZE - 1) {
         msg->m_msgBuf = msgBuf;
         msg->m_msgLen = len;
@@ -104,11 +107,15 @@ void FTLogger::Log(int level, const char* format, ...) {
         pthread_mutex_unlock(&m_poolMutex);
 
         msg->m_msgBuf = new char[len + 1];
+
+        va_list ap;
+        va_start(ap, format);
         vsnprintf(msg->m_msgBuf, len + 1, format, ap);
+        va_end(ap);
+
         msg->m_msgLen = len;
         msg->m_bufFromPool = false;
     }
-    va_end(ap);
 
     gettimeofday(&msg->m_msgTime, NULL);
     msg->m_level = level;
