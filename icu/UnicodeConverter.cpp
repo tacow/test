@@ -15,13 +15,18 @@ class UnicodeConverter {
   private:
     UConverter* converter_;
     UChar* toUnicodeBuf_;
+    int toUnicodeBufLen_;
     char* fromUnicodeBuf_;
+    int fromUnicodeBufLen_;
 
   public:
-    UnicodeConverter() {
+    UnicodeConverter(int toUnicodeBufLen = TO_UNICODE_BUF_LEN,
+                     int fromUnicodeBufLen = FROM_UNICODE_BUF_LEN) {
       converter_ = NULL;
-      toUnicodeBuf_ = new UChar[TO_UNICODE_BUF_LEN];
-      fromUnicodeBuf_ = new char[FROM_UNICODE_BUF_LEN];
+      toUnicodeBufLen_ = toUnicodeBufLen;
+      toUnicodeBuf_ = new UChar[toUnicodeBufLen];
+      fromUnicodeBufLen_ = fromUnicodeBufLen;
+      fromUnicodeBuf_ = new char[fromUnicodeBufLen];
     }
 
     ~UnicodeConverter() {
@@ -39,13 +44,17 @@ class UnicodeConverter {
 
     UChar* ConvertToUnicode(const char* data, int len, int* destLen) {
       UErrorCode err = U_ZERO_ERROR;
-      *destLen = ucnv_toUChars(converter_, toUnicodeBuf_, TO_UNICODE_BUF_LEN, data, len, &err);
+      *destLen = ucnv_toUChars(converter_, toUnicodeBuf_, toUnicodeBufLen_, data, len, &err);
+      if (*destLen > toUnicodeBufLen_)
+        *destLen = toUnicodeBufLen_;
       return toUnicodeBuf_;
     }
 
     char* ConvertFromUnicode(const UChar* data, int len, int* destLen) {
       UErrorCode err = U_ZERO_ERROR;
-      *destLen = ucnv_fromUChars(converter_, fromUnicodeBuf_, FROM_UNICODE_BUF_LEN, data, len, &err);
+      *destLen = ucnv_fromUChars(converter_, fromUnicodeBuf_, fromUnicodeBufLen_, data, len, &err);
+      if (*destLen > fromUnicodeBufLen_)
+        *destLen = fromUnicodeBufLen_;
       return fromUnicodeBuf_;
     }
 
