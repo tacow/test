@@ -1,3 +1,6 @@
+#ifndef UNICODE_CONVERTER_H
+#define UNICODE_CONVERTER_H
+
 #include <unicode/ucnv.h>
 
 #define TO_UNICODE_BUF_LEN 1024
@@ -21,4 +24,6 @@ private:
     char* fromUnicodeBuf_;
     int fromUnicodeBufLen_;
 };
+
+#endif
 
