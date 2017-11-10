@@ -20,9 +20,11 @@ CharsetDetector::~CharsetDetector() {
         delete[] detectBuf_;
 }
 
-void CharsetDetector::CodePageInput(const char* data, int len) {
-    if (detected_)
-        return;
+bool CharsetDetector::CodePageInput(const char* data, int len, std::string& charset) {
+    if (detected_) {
+        charset = charset_;
+        return true;
+    }
 
     bool needDetect = false;
     int copyLen = std::min(len, DETECT_MAX_LEN - detectLen_);
@@ -32,9 +34,8 @@ void CharsetDetector::CodePageInput(const char* data, int len) {
         needDetect = true;
     if (!needDetect) {
         for (int i = 0; i < copyLen; ++i) {
-            if ((data[i] & 0x80)) {
+            if ((data[i] & 0x80))
                 ++nonASCIIByteCount_;
-            }
             if (nonASCIIByteCount_ >= DETECT_MIN_NON_ASCII_LEN) {
                 needDetect = true;
                 break;
@@ -48,27 +49,23 @@ void CharsetDetector::CodePageInput(const char* data, int len) {
         detectBuf_ = NULL;
         detectLen_ = 0;
         nonASCIIByteCount_ = 0;
+        return true;
     }
+    return false;
 }
 
 void CharsetDetector::DetectCharset() {
-    bool succ = false;
     UErrorCode err = U_ZERO_ERROR;
     UCharsetDetector* detector = ucsdet_open(&err);
     ucsdet_setText(detector, detectBuf_, detectLen_, &err);
     const UCharsetMatch* match = ucsdet_detect(detector, &err);
     if (match) {
         int score = ucsdet_getConfidence(match, &err);
-        if (score >= DETECT_MIN_SCORE) {
-            const char* charset = ucsdet_getName(match, &err);
-            if (charset && *charset) {
-                succ = true;
-                OnDetecedCharset(charset);
-            }
-        }
+        if (score >= DETECT_MIN_SCORE)
+            charset_ = ucsdet_getName(match, &err);
     }
-    if (!succ)
-        OnDetecedCharset(DEFAULT_CHARSET);
+    if (charset_.empty())
+        charset_ = DEFAULT_CHARSET;
     ucsdet_close(detector);
 }
 

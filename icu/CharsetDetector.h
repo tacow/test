@@ -1,19 +1,20 @@
 #ifndef CHARSET_DETECTOR_H
 #define CHARSET_DETECTOR_H
 
+#include <string>
+
 class CharsetDetector {
 public:
     CharsetDetector();
     ~CharsetDetector();
 
-    void CodePageInput(const char* data, int len);
-
-    virtual void OnDetecedCharset(const char* charset) = 0;
+    bool CodePageInput(const char* data, int len, std::string& charset);
 
 private:
     void DetectCharset();
 
     bool detected_;
+    std::string charset_;
     char* detectBuf_;
     int detectLen_;
     int nonASCIIByteCount_;
