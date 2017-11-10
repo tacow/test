@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
         bool charsetDetected = false;
         bool charsetSet = false;
         CharsetDetector detector;
-        UnicodeConvertStream stream;
+        UnicodeConvertStreamTest stream;
         if (charset) {
             if (stream.SetCharset(charset)) {
                 charsetDetected = true;
@@ -93,6 +93,7 @@ int main(int argc, char** argv) {
                 std::string detectedCharset;
                 charsetDetected = detector.CodePageInput(inBuf, n, detectedCharset);
                 if (charsetDetected) {
+                    printf("Detected charset: %s\n", detectedCharset.c_str());
                     stream.SetCharset(detectedCharset.c_str());
                     charsetSet = true;
                 }
