@@ -27,11 +27,9 @@ public:
         const UChar* ch;
         int chLen, chWidth;
         while ((ch = ci_.GetNextChar(&chLen, &chWidth))) {
-            if (chWidth > 0) {
-                UChar sp = ' ';
-                WriteUChar(ch, len);
-                WriteUChar(&sp, 1);
-            }
+            UChar sp = ' ';
+            WriteUChar(ch, chLen);
+            WriteUChar(&sp, 1);
         }
     }
 
