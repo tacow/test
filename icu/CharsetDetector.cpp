@@ -44,6 +44,7 @@ bool CharsetDetector::CodePageInput(const char* data, int len, std::string& char
     }
     if (needDetect) {
         DetectCharset();
+        charset = charset_;
         detected_ = true;
         delete[] detectBuf_;
         detectBuf_ = NULL;
