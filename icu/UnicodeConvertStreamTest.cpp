@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
         }
 
         bool charsetSet = false;
-        UnicodeConvertStream stream;
+        UnicodeConvertStreamTest stream;
         if (charset) {
             charsetSet = stream.SetCharset(charset);
             if (!charsetSet)
