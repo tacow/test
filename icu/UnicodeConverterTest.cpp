@@ -1,8 +1,9 @@
-// g++ -g -o UnicodeConverterTest UnicodeConverterTest.cpp UnicodeConverter.cpp -licui18n
+// g++ -g -o UnicodeConverterTest UnicodeConverterTest.cpp UnicodeConverter.cpp StringUtil.cpp CharIterator.cpp -licui18n
 
 #include <stdio.h>
 #include <string.h>
 #include "UnicodeConverter.h"
+#include "StringUtil.h"
 
 FILE* inF = NULL;
 FILE* outF = NULL;
@@ -51,7 +52,12 @@ int main(int argc, char** argv) {
     int n = fread(inBuf, 1, 4096, inF);
     int convertLen;
     UChar* buf = converter.ConvertToUnicode(inBuf, n, &convertLen);
-    WriteUChar(buf, convertLen);
+
+    ustring str(buf, convertLen);
+    int width = StrWidth(str);
+    RestrainStr(str, width / 2);
+
+    WriteUChar(str.c_str(), str.size());
 
     fclose(inF);
     fclose(outF);
