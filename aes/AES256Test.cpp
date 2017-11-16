@@ -56,10 +56,10 @@ int main(int argc, char* argv[]) {
     BIO_dump_cb(WriteStr, &keyStr, (const char *)key, KEY_LEN);
     printf("Key:\n%s", keyStr.c_str());
 
-    unsigned char iv[IV_LEN];
-    RAND_bytes(iv, IV_LEN);
+    unsigned char iv[BLOCK_LEN];
+    RAND_bytes(iv, BLOCK_LEN);
     string ivStr;
-    BIO_dump_cb(WriteStr, &ivStr, (const char *)iv, IV_LEN);
+    BIO_dump_cb(WriteStr, &ivStr, (const char *)iv, BLOCK_LEN);
     printf("IV:\n%s", ivStr.c_str());
 
     FILE* oriF = fopen(oriFile.c_str(), "rb");
@@ -74,8 +74,8 @@ int main(int argc, char* argv[]) {
     fileEncrypt.SetFile(encryptF);
 
     int n;
-    unsigned char buf[10000];
-    while((n = fread(buf, 1, 10000, oriF)) > 0) {
+    unsigned char buf[10005];
+    while((n = fread(buf, 1, 10005, oriF)) > 0) {
         if (!fileEncrypt.PlainTextInput(buf, n)) {
             printf("File encrypt fail\n");
             return 1;
@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
     fileDecrypt.Init(key, iv);
     fileDecrypt.SetFile(decryptF);
 
-    while((n = fread(buf, 1, 10000, encryptF)) > 0) {
+    while((n = fread(buf, 1, 10005, encryptF)) > 0) {
         if (!fileDecrypt.CipherTextInput(buf, n)) {
             printf("File decrypt fail\n");
             return 1;

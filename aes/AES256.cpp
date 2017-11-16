@@ -13,7 +13,7 @@ AES256Encrypt::~AES256Encrypt() {
     delete[] outputBuf_;
 }
 
-void AES256Encrypt::Init(unsigned char key[KEY_LEN], unsigned char iv[IV_LEN]) {
+void AES256Encrypt::Init(unsigned char key[KEY_LEN], unsigned char iv[BLOCK_LEN]) {
     EVP_EncryptInit_ex(cipherCtx_, EVP_aes_256_cbc(), NULL, key, iv);
 }
 
@@ -51,7 +51,7 @@ AES256Decrypt::~AES256Decrypt() {
     delete[] outputBuf_;
 }
 
-void AES256Decrypt::Init(unsigned char key[KEY_LEN], unsigned char iv[IV_LEN]) {
+void AES256Decrypt::Init(unsigned char key[KEY_LEN], unsigned char iv[BLOCK_LEN]) {
     EVP_DecryptInit_ex(cipherCtx_, EVP_aes_256_cbc(), NULL, key, iv);
 }
 

@@ -5,7 +5,6 @@
 
 #define KEY_LEN     (256 / 8)
 #define BLOCK_LEN   (128 / 8)
-#define IV_LEN      BLOCK_LEN
 #define INPUT_LEN   4096
 #define OUTPUT_LEN  (INPUT_LEN + BLOCK_LEN)
 
@@ -14,7 +13,7 @@ public:
     AES256Encrypt();
     ~AES256Encrypt();
 
-    void Init(unsigned char key[KEY_LEN], unsigned char iv[IV_LEN]);
+    void Init(unsigned char key[KEY_LEN], unsigned char iv[BLOCK_LEN]);
 
     bool PlainTextInput(unsigned char* plainText, int len);
     bool PlainTextFinish();
@@ -31,7 +30,7 @@ public:
     AES256Decrypt();
     ~AES256Decrypt();
 
-    void Init(unsigned char key[KEY_LEN], unsigned char iv[IV_LEN]);
+    void Init(unsigned char key[KEY_LEN], unsigned char iv[BLOCK_LEN]);
 
     bool CipherTextInput(unsigned char* cipherText, int len);
     bool CipherTextFinish();
