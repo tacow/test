@@ -21,32 +21,59 @@ void CharIterator::SetString(const UChar* str, int len) {
 }
 
 const UChar* CharIterator::GetNextChar(int* charLen, int* charWidth) {
+    *charLen = 0;
+    *charWidth = 0;
     if (!str_ || pos_ == len_)
         return NULL;
 
-    bool valid = true;
-    const UChar* res = NULL;
+    const UChar* res = &str_[pos_];
     do {
-        UChar32 u32 = 0;
-        *charLen = 1;
+        bool valid = true;
+        UChar32 code = 0;
+        int codeLen = 0;
         if (IsLeadSurrogate(str_[pos_])) {
             if (pos_ + 1 < len_ && IsTrailSurrogate(str_[pos_ + 1])) {
-                u32 = AssembleSurrogatePair(str_[pos_], str_[pos_ + 1]);
-                *charLen = 2;
+                code = AssembleSurrogatePair(str_[pos_], str_[pos_ + 1]);
+                codeLen = 2;
             } else {
                 valid = false;
             }
         } else if (IsTrailSurrogate(str_[pos_])) {
             valid = false;
         } else {
-            u32 = str_[pos_];
+            code = str_[pos_];
+            codeLen = 1;
         }
         if (valid) {
-            *charWidth = wcwidth(u32);
-            res = &str_[pos_];
+            int codeWidth = wcwidth(code);
+            if (codeWidth < 0) {
+                if (*charLen == 0) {
+                    *charLen = codeLen;
+                    *charWidth = codeWidth;
+                    pos_ += codeLen;
+                }
+                break;
+            } else if (codeWidth == 0) {
+                *charLen += codeLen;
+                pos_ += codeLen;
+            } else {
+                if (*charLen == 0) {
+                    *charLen = codeLen;
+                    *charWidth = codeWidth;
+                    pos_ += codeLen;
+                } else {
+                    break;
+                }
+            }
+        } else {
+            if (*charLen == 0) {
+                pos_ += 1;
+                return NULL;
+            } else {
+                break;
+            }
         }
-        pos_ += *charLen;
-    } while (!valid && pos_ < len_);
+    } while (pos_ < len_);
     return res;
 }
 
