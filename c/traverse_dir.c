@@ -5,11 +5,19 @@
 #include <stdio.h>
 #include <string.h>
 
-void TraverseDir(const char* path) {
-    size_t pathLen = strlen(path);
-    if (pathLen == 0)
-        return;
+void PathAppendEntry(char* entryPathBuf, int entryPathLen, const char* basePath, const char* entryName) {
+    size_t basePathLen = strlen(basePath);
+    if (basePathLen == 0) {
+        snprintf(entryPathBuf, entryPathLen, "%s", entryName);
+    } else {
+        if (basePath[basePathLen - 1] == '/')
+            snprintf(entryPathBuf, entryPathLen, "%s%s", basePath, entryName);
+        else
+            snprintf(entryPathBuf, entryPathLen, "%s/%s", basePath, entryName);
+    }
+}
 
+void TraverseDir(const char* path, const char* relativePath) {
     DIR* dir = opendir(path);
     if (!dir)
         return;
@@ -21,19 +29,19 @@ void TraverseDir(const char* path) {
         if (strcmp(entryName, ".") == 0 || strcmp(entryName, "..") == 0)
             continue;
 
-        char entryPath[256];
-        if (path[pathLen - 1] == '/')
-            snprintf(entryPath, 256, "%s%s", path, entryName);
-        else
-            snprintf(entryPath, 256, "%s/%s", path, entryName);
+        char entryPath[1024];
+        PathAppendEntry(entryPath, 1024, path, entryName);
+
+        char relativeEntryPath[1024];
+        PathAppendEntry(relativeEntryPath, 1024, relativePath, entryName);
 
         struct stat statBuf;
         if (0 != lstat(entryPath, &statBuf))
             continue;
         if (S_ISREG(statBuf.st_mode))
-            printf("%s\n", entryPath);
+            printf("%s | %s\n", entryPath, relativeEntryPath);
         else if (S_ISDIR(statBuf.st_mode))
-            TraverseDir(entryPath);
+            TraverseDir(entryPath, relativeEntryPath);
     }
     closedir(dir);
 }
@@ -46,7 +54,7 @@ int main(int argc, char* argv[]) {
     }
 
     const char* path = argv[1];
-    TraverseDir(path);
+    TraverseDir(path, "");
     return 0;
 }
 
