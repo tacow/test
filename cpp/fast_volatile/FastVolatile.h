@@ -1,6 +1,9 @@
 #ifndef FAST_VOLATILE_H
 #define FAST_VOLATILE_H
 
+// Fast write, normal read
+// Only one thread can write the fast volatile object, multiple threads can read it
+
 template <class T>
 class FastVolatile {
 public:
