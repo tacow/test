@@ -4,19 +4,19 @@
 
 int main() {
     DurationRecorder recorder;
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 10; ++i) {
         recorder.Start();
-        usleep(300);
+        usleep(3000);
         recorder.Record("1_state1");
-        usleep(200);
+        usleep(2000);
         recorder.Record("2_state2");
-        usleep(500);
+        usleep(5000);
         recorder.Record("3_state3");
-        usleep(800);
+        usleep(8000);
         recorder.Record("4_state4");
-        usleep(600);
+        usleep(6000);
         recorder.Record("5_state5");
-        usleep(700);
+        usleep(7000);
         recorder.Finish();
     }
     string statStr = recorder.Dump();

@@ -22,26 +22,26 @@ void DurationRecorder::Start() {
 }
 
 void DurationRecorder::Record(const string& state) {
-    string durationName = lastState_ + " ~ " + state;
-
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     long duration = TimeDiff(&lastTS_, &ts);
-
+    string durationName = lastState_ + " ~ " + state;
     durationStat_[durationName] += duration;
 
     lastState_ = state;
-    lastTS_ = ts;
+    memset(&lastTS_, 0, sizeof(lastTS_));
+    clock_gettime(CLOCK_MONOTONIC, &lastTS_);
 }
 
 void DurationRecorder::Finish() {
-    string durationName = lastState_ + " ~ finish";
-
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     long duration = TimeDiff(&lastTS_, &ts);
-
+    string durationName = lastState_ + " ~ finish";
     durationStat_[durationName] += duration;
+
+    lastState_.clear();
+    memset(&lastTS_, 0, sizeof(lastTS_));
 }
 
 string DurationRecorder::Dump() {
