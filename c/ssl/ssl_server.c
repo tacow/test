@@ -16,8 +16,8 @@ void ErrorExit(const char* msg) {
     exit(1);
 }
 
-void ErrorExit0(const char* msg) {
-    printf("\nERROR: %s\n", msg);
+void ErrorExit0(const char* msg, int err) {
+    printf("\nERROR: %s(%d)\n", msg, err);
     exit(1);
 }
 
@@ -94,11 +94,9 @@ int DoPollTimeOut(struct pollfd *fds, nfds_t nfds, int timeout) {
 const char* GetRandomStr() {
     static char g_strBuf[256];
 
-    srand(time(NULL));
     int len = rand() % 30 + 20;
-    
-    int i;
-    for (i = 0; i < len; ++len) {
+    int i = 0;
+    for (i = 0; i < len; ++i) {
         char randChar = 'a' + (rand() % 26);
         g_strBuf[i] = randChar;
     }
@@ -122,7 +120,7 @@ void MY_SSL_Accept(int sockFD, SSL* ssl) {
         } else if (err == SSL_ERROR_WANT_WRITE) {
             pfd.events = POLLOUT;
         } else {
-            ErrorExit0("SSL_accept");
+            ErrorExit0("SSL_accept", err);
         }
 
         DoPoll(&pfd, 1);
@@ -144,7 +142,29 @@ int MY_SSL_WriteData(int sockFD, SSL* ssl, const char* buf, int len) {
         } else if (err == SSL_ERROR_WANT_WRITE) {
             pfd.events = POLLOUT;
         } else {
-            ErrorExit0("SSL_write");
+            ErrorExit0("SSL_write", err);
+        }
+
+        DoPoll(&pfd, 1);
+    }
+}
+
+int MY_SSL_Shutdown(int sockFD, SSL* ssl) {
+    for (;;) {
+        int ret = SSL_shutdown(ssl);
+        if (ret >= 0)	// Success
+            return ret;
+
+        struct pollfd pfd;
+        memset(&pfd, 0, sizeof(pfd));
+        pfd.fd = sockFD; 
+        int err = SSL_get_error(ssl, ret);
+        if (err == SSL_ERROR_WANT_READ) {
+            pfd.events = POLLIN;
+        } else if (err == SSL_ERROR_WANT_WRITE) {
+            pfd.events = POLLOUT;
+        } else {
+            ErrorExit0("SSL_shutdown", err);
         }
 
         DoPoll(&pfd, 1);
@@ -163,22 +183,23 @@ int main(int argc, char* argv[]) {
     int s = SocketAccept(port);
     MakeNonBlocking(s);
 
+    srand(time(NULL));
     SSL_library_init();
 
-    SSL_CTX* ctx = SSL_CTX_new(TLS_client_method());
+    SSL_CTX* ctx = SSL_CTX_new(TLS_server_method());
     //SSL_CTX_set_min_proto_version(ctx, TLS1_2_VERSION);
     int ret = 0;
     ret = SSL_CTX_use_certificate_file(ctx, certFile, SSL_FILETYPE_PEM);
     if (ret != 1) {
-        ErrorExit0("SSL_CTX_use_certificate_file");
+        ErrorExit0("SSL_CTX_use_certificate_file", ret);
     }
     ret = SSL_CTX_use_PrivateKey_file(ctx, privkeyFile, SSL_FILETYPE_PEM);
     if (ret != 1) {
-        ErrorExit0("SSL_CTX_use_PrivateKey_file");
+        ErrorExit0("SSL_CTX_use_PrivateKey_file", ret);
     }
     ret = SSL_CTX_check_private_key(ctx);
     if (ret != 1) {
-        ErrorExit0("SSL_CTX_check_private_key");
+        ErrorExit0("SSL_CTX_check_private_key", ret);
     }
 
     SSL* ssl = SSL_new(ctx);
@@ -197,7 +218,7 @@ int main(int argc, char* argv[]) {
         X509_free(peerCert);
     }
 
-    int i;
+    int i = 0;
     for (i = 0; i < 10; ++i) {
         const char* str = GetRandomStr();
         int len = (int)strlen(str);
@@ -207,7 +228,9 @@ int main(int argc, char* argv[]) {
             len -= n;
         }
     }
+    MY_SSL_Shutdown(s, ssl);
     SSL_free(ssl);
+    SSL_CTX_free(ctx);
     close(s);
     return 0;
 }

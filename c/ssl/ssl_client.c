@@ -16,8 +16,8 @@ void ErrorExit(const char* msg) {
     exit(1);
 }
 
-void ErrorExit0(const char* msg) {
-    printf("\nERROR: %s\n", msg);
+void ErrorExit0(const char* msg, int err) {
+    printf("\nERROR: %s(%d)\n", msg, err);
     exit(1);
 }
 
@@ -102,7 +102,7 @@ void MY_SSL_Connect(int sockFD, SSL* ssl) {
         } else if (err == SSL_ERROR_WANT_WRITE) {
             pfd.events = POLLOUT;
         } else {
-            ErrorExit0("SSL_connect");
+            ErrorExit0("SSL_connect", err);
         }
 
         DoPoll(&pfd, 1);
@@ -123,8 +123,10 @@ int MY_SSL_ReadData(int sockFD, SSL* ssl, char* buf, int len) {
             pfd.events = POLLIN;
         } else if (err == SSL_ERROR_WANT_WRITE) {
             pfd.events = POLLOUT;
+        } else if (err == SSL_ERROR_ZERO_RETURN) {
+            return 0;
         } else {
-            ErrorExit0("SSL_read");
+            ErrorExit0("SSL_read", err);
         }
 
         DoPoll(&pfd, 1);
@@ -166,9 +168,15 @@ int main(int argc, char* argv[]) {
     for (;;) {
         char buf[1024];
         int n = MY_SSL_ReadData(s, ssl, buf, 1023);
+        if (n == 0)
+            break;
         buf[n] = '\0';
         printf("Receive Data: %s\n", buf);
     }
+    printf("SSL closed\n");
+    SSL_free(ssl);
+    SSL_CTX_free(ctx);
+    close(s);
     return 0;
 }
 
